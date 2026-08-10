@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Workiffy connects businesses with consultants, experts and independent service providers.">
+  <title>Workiffy — Expertise, On Demand</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <section id="publicSite">
+    <header class="public-nav">
+      <a class="logo" href="/">Workiffy</a>
+      <nav>
+        <a href="#how">How it Works</a>
+        <a href="#categories">Categories</a>
+        <a href="#why">Why Workiffy</a>
+      </nav>
+      <div class="public-actions">
+        <button class="secondary" data-open-auth="login">Sign In</button>
+        <button class="primary" data-open-auth="register">Join Workiffy</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="landing-hero">
+        <div class="landing-copy">
+          <span class="eyebrow">GLOBAL PROFESSIONAL SERVICES MARKETPLACE</span>
+          <h1>Find the right expertise. Turn requirements into results.</h1>
+          <p>
+            Workiffy connects service seekers with consultants, experts and independent
+            professionals through structured projects, proposals, contracts and delivery workflows.
+          </p>
+          <div class="hero-actions">
+            <button class="primary large" data-open-auth="register" data-role="client">Post a Project</button>
+            <button class="secondary large" data-open-auth="register" data-role="provider">Find Projects</button>
+          </div>
+          <div class="trust-row">
+            <span>Project-based hiring</span><span>•</span><span>Role-based dashboards</span><span>•</span><span>Milestone workflow</span>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="mini-card">
+            <small>OPEN PROJECT</small>
+            <strong>Global GTM Strategy</strong>
+            <span>Business Consulting · Remote</span>
+          </div>
+          <div class="mini-card shift">
+            <small>PROPOSAL</small>
+            <strong>Specialist response received</strong>
+            <span>Bid · Timeline · Cover Letter</span>
+          </div>
+          <div class="mini-card">
+            <small>CONTRACT</small>
+            <strong>Milestones & Workroom</strong>
+            <span>Deliver · Review · Complete</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="how" class="landing-section">
+        <div class="section-heading">
+          <span class="eyebrow">HOW IT WORKS</span>
+          <h2>One marketplace. Two focused workflows.</h2>
+        </div>
+        <div class="landing-grid three">
+          <article><b>01</b><h3>Post or Discover</h3><p>Clients publish requirements. Providers search relevant projects and opportunities.</p></article>
+          <article><b>02</b><h3>Compare & Select</h3><p>Providers submit proposals. Clients shortlist, reject or convert the best proposal into an offer.</p></article>
+          <article><b>03</b><h3>Deliver & Review</h3><p>Accepted offers become contracts with milestones, workroom communication and feedback.</p></article>
+        </div>
+      </section>
+
+      <section id="categories" class="landing-section alt">
+        <div class="section-heading">
+          <span class="eyebrow">CATEGORIES</span>
+          <h2>Built for professional and specialist services.</h2>
+        </div>
+        <div class="category-grid">
+          <span>IT & Software</span><span>Digital Marketing</span><span>Design & Creative</span>
+          <span>Business Consulting</span><span>Manufacturing Consulting</span><span>Food & Beverage</span>
+          <span>Finance</span><span>Legal</span><span>Operations</span><span>Research</span>
+        </div>
+      </section>
+
+      <section id="why" class="landing-section">
+        <div class="section-heading">
+          <span class="eyebrow">WHY WORKIFFY</span>
+          <h2>Designed around accountable project execution.</h2>
+        </div>
+        <div class="landing-grid three">
+          <article><h3>Clear requirements</h3><p>Structured project briefs reduce ambiguity before proposals begin.</p></article>
+          <article><h3>Professional profiles</h3><p>Skills, experience, rates, reviews and completed-contract history support better selection.</p></article>
+          <article><h3>Delivery visibility</h3><p>Contracts, milestones, messages and reviews keep project status visible to both parties.</p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="public-footer">
+      <div><div class="logo">Workiffy</div><p>Professional services marketplace.</p></div>
+      <div><strong>Platform</strong><span>Service Seekers</span><span>Service Providers</span><span>Marketplace</span></div>
+      <div><strong>Support</strong><span id="supportEmail">support@workiffy.com</span><span>Privacy</span><span>Terms</span></div>
+    </footer>
+  </section>
+
+  <section id="appShell" class="app-shell hidden">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-top">
+        <div class="logo">Workiffy</div>
+        <button id="closeMenu" class="icon-button mobile-only" aria-label="Close menu">×</button>
+      </div>
+
+      <nav id="sidebarNav" class="nav"></nav>
+
+      <div class="user-card">
+        <div id="avatar" class="avatar">W</div>
+        <div class="grow">
+          <strong id="sidebarName">User</strong>
+          <small id="sidebarRole">ACCOUNT</small>
+        </div>
+        <button id="logoutButton" class="icon-button" aria-label="Sign out">↪</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button id="openMenu" class="icon-button mobile-only" aria-label="Open menu">☰</button>
+        <div>
+          <strong>Workiffy Marketplace</strong>
+          <small id="welcomeText">Welcome</small>
+        </div>
+        <div class="top-actions">
+          <span id="subscriptionPill" class="pill">Subscription</span>
+          <button class="notification-button" data-view="notifications">Notifications <b id="notificationCount">0</b></button>
+        </div>
+      </header>
+
+      <section id="view-dashboard" class="view">
+        <div class="dashboard-hero">
+          <div>
+            <span class="eyebrow">WORKIFFY DASHBOARD</span>
+            <h1 id="dashboardTitle">Welcome to Workiffy</h1>
+            <p id="dashboardSubtitle">Manage your marketplace activity from one place.</p>
+          </div>
+          <button id="dashboardPrimary" class="primary">Get Started</button>
+        </div>
+        <div id="dashboardStats" class="stats"></div>
+        <div class="panel">
+          <div class="panel-head">
+            <div><h2 id="dashboardSectionTitle">Marketplace</h2><p id="dashboardSectionSubtitle">Recent activity.</p></div>
+            <button id="dashboardSectionButton" class="secondary">View All</button>
+          </div>
+          <div id="dashboardCards" class="cards"></div>
+        </div>
+      </section>
+
+      <section id="view-post" class="view hidden">
+        <div class="page-head"><div><span class="eyebrow">SERVICE SEEKER</span><h1>Post a Project</h1><p>Create a clear requirement for relevant professionals.</p></div></div>
+        <form id="postProjectForm" class="form-card">
+          <div class="form-grid">
+            <label class="span-2">Project Title<input name="title" minlength="5" maxlength="160" required></label>
+            <label>Category
+              <select name="category" required>
+                <option value="">Select category</option>
+                <option>IT & Software</option><option>Digital Marketing</option><option>Design & Creative</option>
+                <option>Business Consulting</option><option>Manufacturing Consulting</option><option>Food & Beverage</option>
+                <option>Finance</option><option>Legal</option><option>Operations</option><option>Research</option>
+              </select>
+            </label>
+            <label>Subcategory<input name="subcategory" maxlength="100"></label>
+            <label>Contract Type<select id="projectContractType" name="contractType"><option value="fixed">Fixed Price</option><option value="hourly">Hourly</option></select></label>
+            <label id="budgetField">Budget<input name="budget" type="number" min="1"></label>
+            <div id="hourlyFields" class="subgrid hidden">
+              <label>Hourly Minimum<input name="hourlyMin" type="number" min="1"></label>
+              <label>Hourly Maximum<input name="hourlyMax" type="number" min="1"></label>
+            </div>
+            <label>Currency<select name="currency"><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option><option>AED</option><option>SGD</option></select></label>
+            <label>Experience<select name="experienceLevel"><option value="entry">Entry</option><option value="intermediate" selected>Intermediate</option><option value="expert">Expert</option></select></label>
+            <label>Work Type<select name="locationType"><option value="remote">Remote</option><option value="hybrid">Hybrid</option><option value="onsite">On-site</option></select></label>
+            <label>Location<input name="location" value="Remote" maxlength="160"></label>
+            <label>Duration
+              <select name="duration">
+                <option value="under_1_month">Under 1 month</option><option value="1_3_months" selected>1–3 months</option>
+                <option value="3_6_months">3–6 months</option><option value="over_6_months">Over 6 months</option><option value="ongoing">Ongoing</option>
+              </select>
+            </label>
+            <label>Project Expiry<input name="expirationDate" type="date" required></label>
+            <label class="span-2">Required Skills<input name="skills" placeholder="Comma-separated skills"></label>
+            <label class="span-2">Description<textarea name="description" rows="10" minlength="50" maxlength="8000" required></textarea></label>
+          </div>
+          <div class="form-actions"><span>Do not put confidential data in public project descriptions.</span><button class="primary" type="submit">Post Project</button></div>
+        </form>
+      </section>
+
+      <section id="view-projects" class="view hidden">
+        <div class="page-head"><div><span class="eyebrow">MY PROJECTS</span><h1>Project Management</h1><p>Review proposals and manage your posted work.</p></div></div>
+        <div id="myProjectCards" class="cards"></div>
+      </section>
+
+      <section id="view-marketplace" class="view hidden">
+        <div class="page-head"><div><span class="eyebrow">PROJECT MARKETPLACE</span><h1>Find Projects</h1><p>Search open client requirements and submit proposals.</p></div></div>
+        <form id="projectSearchForm" class="filter-bar">
+          <input name="q" placeholder="Search projects or skills">
+          <select name="category"><option value="">All Categories</option><option>IT & Software</option><option>Digital Marketing</option><option>Design & Creative</option><option>Business Consulting</option><option>Manufacturing Consulting</option><option>Food & Beverage</option><option>Finance</option><option>Legal</option></select>
+          <select name="contractType"><option value="">Any Contract</option><option value="fixed">Fixed Price</option><option value="hourly">Hourly</option></select>
+          <button class="primary" type="submit">Search</button>
+        </form>
+        <div id="marketplaceCards" class="cards"></div>
+      </section>
+
+      <section id="view-proposals" class="view hidden">
+        <div class="page-head"><div><span class="eyebrow">MY PROPOSALS</span><h1>Proposal Tracker</h1><p>Track submitted, shortlisted and offered proposals.</p></div></div>
+        <div id="myProposalCards" class="cards"></div>
+      </section>
+
+      <section id="view-saved-projects" class="view hidden">
+        <div class="page-head"><div><span class="eyebrow">SAVED</span><h1>Saved Projects</h1><p>Projects you want to revisit.</p></div></div>
+        <div id="savedProjectCards" class="cards"></div>
+      </section>
+
+      <section id="view-experts" class="view hidden">
+        <div class="page-head"><div><span class="eyebrow">EXPERT DIRECTORY</span><h1>Find Experts</h1><p>Search service providers by profile and skill.</p></div></div>
+        <form id="expertSearchForm" class="filter-bar expert-filter">
+          <input name="q" placeholder="Search experts">
+          <input name="skill" placeholder="Skill e.g. MongoDB">
+          <button class="primary" type="submit">Search</button>
+        </form>
+        <div id="expertCards" class="cards"></div>
+      </section>
+
+      <section id="view-saved-providers" class="view hidden">
+        <div class="page-head"><div><span class="eyebrow">SAVED</span><h1>Saved Providers</h1><p>Your shortlisted professional profiles.</p></div></div>
+        <div id="savedProviderCards" class="cards"></div>
+      </section>
+
+      <section id="view-contracts" class="view hidden">
+        <div class="page-head"><div><span class="eyebrow">DELIVERY</span><h1>Contracts</h1><p>Manage offers, milestones and completed engagements.</p></div></div>
+        <div id="contractCards" class="cards"></div>
+      </section>
+
+      <section id="view-workroom" class="view hidden">
+        <button id="backToContracts" class="text-button">← Back to Contracts</button>
+        <div class="page-head">
+          <div><span class="eyebrow">CONTRACT WORKROOM</span><h1 id="workroomTitle">Contract</h1><p id="workroomMeta">Milestones and communication.</p></div>
+          <button id="completeContractButton" class="primary hidden">Complete Contract</button>
+        </div>
+        <div class="workroom-grid">
+          <section class="panel"><div class="panel-head"><div><h2>Milestones</h2><p>Track delivery and approval.</p></div></div><div id="milestoneList" class="milestone-list"></div></section>
+          <section class="panel">
+            <div class="panel-head"><div><h2>Messages</h2><p>Contract-specific communication.</p></div></div>
+            <div id="messageList" class="message-list"></div>
+            <form id="messageForm" class="message-form"><textarea name="body" rows="2" maxlength="5000" required></textarea><button class="primary" type="submit">Send</button></form>
+          </section>
+        </div>
+      </section>
+
+      <section id="view-reviews" class="view hidden">
+        <div class="page-head"><div><span class="eyebrow">REPUTATION</span><h1>Reviews</h1><p>Feedback from completed engagements.</p></div></div>
+        <div id="reviewCards" class="cards"></div>
+      </section>
+
+      <section id="view-notifications" class="view hidden">
+        <div class="page-head">
+          <div><span class="eyebrow">ACTIVITY</span><h1>Notifications</h1><p>Marketplace updates requiring your attention.</p></div>
+          <button id="markAllRead" class="secondary">Mark All Read</button>
+        </div>
+        <div id="notificationList" class="notification-list"></div>
+      </section>
+
+      <section id="view-profile" class="view hidden">
+        <div class="page-head"><div><span class="eyebrow">PROFILE</span><h1>Professional Profile</h1><p>Keep your Workiffy profile accurate.</p></div></div>
+        <form id="profileForm" class="form-card form-grid">
+          <label>Name<input name="name" minlength="2" maxlength="80" required></label>
+          <label>Professional Headline<input name="headline" maxlength="140"></label>
+          <label>Company Name<input name="companyName" maxlength="140"></label>
+          <label>Location<input name="location" maxlength="140"></label>
+          <label>Country<input name="country" maxlength="80"></label>
+          <label class="provider-profile">Hourly Rate<input name="hourlyRate" type="number" min="0"></label>
+          <label class="provider-profile">Availability<select name="availability"><option value="available">Available</option><option value="limited">Limited</option><option value="unavailable">Unavailable</option></select></label>
+          <label>Website<input name="website" maxlength="240"></label>
+          <label class="provider-profile">Portfolio URL<input name="portfolioUrl" maxlength="240"></label>
+          <label class="span-2">Skills<input name="skills" placeholder="Comma-separated"></label>
+          <label class="span-2">Bio<textarea name="bio" rows="8" maxlength="1800"></textarea></label>
+          <button class="primary" type="submit">Save Profile</button>
+        </form>
+      </section>
+
+
+      <section id="view-subscription" class="view hidden">
+        <div class="page-head"><div><span class="eyebrow">MEMBERSHIP</span><h1>Subscription</h1><p>View your Workiffy access plan and current status.</p></div></div>
+        <div id="subscriptionContent" class="cards"></div>
+      </section>
+
+      <section id="view-admin" class="view hidden">
+        <div class="page-head"><div><span class="eyebrow">ADMIN</span><h1>Marketplace Administration</h1><p>Platform metrics and account controls.</p></div></div>
+        <div id="adminMetrics" class="stats"></div>
+        <div class="panel">
+          <div class="panel-head"><div><h2>Recent Users</h2><p>Manage account access.</p></div></div>
+          <div id="adminUsers" class="table-wrap"></div>
+        </div>
+      </section>
+    </main>
+  </section>
+
+  <dialog id="authDialog" class="dialog">
+    <div class="dialog-head">
+      <div><span class="eyebrow">WORKIFFY ACCOUNT</span><h2 id="authDialogTitle">Sign In</h2></div>
+      <button class="icon-button close-dialog" type="button">×</button>
+    </div>
+    <div class="tabs">
+      <button type="button" class="tab active" data-auth-tab="login">Sign In</button>
+      <button type="button" class="tab" data-auth-tab="register">Create Account</button>
+    </div>
+    <form id="loginForm" class="stack">
+      <label>Email<input name="email" type="email" required autocomplete="email"></label>
+      <label>Password<input name="password" type="password" required autocomplete="current-password"></label>
+      <button class="primary" type="submit">Sign In</button>
+    </form>
+    <form id="registerForm" class="stack hidden">
+      <label>Full Name<input name="name" minlength="2" maxlength="80" required></label>
+      <label>Email<input name="email" type="email" required autocomplete="email"></label>
+      <label>Password<input name="password" type="password" minlength="8" required autocomplete="new-password"></label>
+      <label>Account Type<select name="role"><option value="client">Service Seeker / Client</option><option value="provider">Service Provider / Expert</option></select></label>
+      <button class="primary" type="submit">Create Account</button>
+    </form>
+  </dialog>
+
+  <dialog id="proposalDialog" class="dialog">
+    <form id="proposalForm" class="stack">
+      <div class="dialog-head"><div><span class="eyebrow">SUBMIT PROPOSAL</span><h2 id="proposalTitle">Project</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+      <input name="projectId" type="hidden">
+      <label>Bid / Hourly Rate<input name="bidAmount" type="number" min="1" required></label>
+      <label>Estimated Delivery Days<input name="estimatedDays" type="number" min="1" max="3650" required></label>
+      <label>Cover Letter<textarea name="coverLetter" rows="9" minlength="40" maxlength="5000" required></textarea></label>
+      <button class="primary" type="submit">Submit Proposal</button>
+    </form>
+  </dialog>
+
+  <dialog id="proposalReviewDialog" class="dialog wide">
+    <div class="dialog-head"><div><span class="eyebrow">PROJECT PROPOSALS</span><h2 id="proposalReviewTitle">Proposals</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+    <div id="proposalReviewList"></div>
+  </dialog>
+
+  <dialog id="offerDialog" class="dialog">
+    <form id="offerForm" class="stack">
+      <div class="dialog-head"><div><span class="eyebrow">SEND OFFER</span><h2>Contract Offer</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+      <input name="proposalId" type="hidden">
+      <p class="muted">For fixed-price work, enter milestones one per line: <strong>Title | Amount | YYYY-MM-DD</strong>. Leave blank for one automatic delivery milestone.</p>
+      <label>Milestones<textarea name="milestones" rows="8" placeholder="Research & Strategy | 25000 | 2026-09-15&#10;Final Delivery | 50000 | 2026-09-30"></textarea></label>
+      <button class="primary" type="submit">Send Offer</button>
+    </form>
+  </dialog>
+
+  <dialog id="milestoneDialog" class="dialog">
+    <form id="milestoneForm" class="stack">
+      <div class="dialog-head"><div><span class="eyebrow">MILESTONE</span><h2 id="milestoneDialogTitle">Milestone Action</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+      <input name="contractId" type="hidden"><input name="milestoneId" type="hidden"><input name="action" type="hidden">
+      <label>Note<textarea name="note" rows="7" maxlength="3000"></textarea></label>
+      <button class="primary" type="submit">Continue</button>
+    </form>
+  </dialog>
+
+  <dialog id="reviewDialog" class="dialog">
+    <form id="reviewForm" class="stack">
+      <div class="dialog-head"><div><span class="eyebrow">REVIEW</span><h2>Rate This Engagement</h2></div><button class="icon-button close-dialog" type="button">×</button></div>
+      <input name="contractId" type="hidden">
+      <label>Rating<select name="rating"><option value="5">5 — Excellent</option><option value="4">4 — Very Good</option><option value="3">3 — Good</option><option value="2">2 — Needs Improvement</option><option value="1">1 — Poor</option></select></label>
+      <label>Feedback<textarea name="comment" rows="7" maxlength="2500"></textarea></label>
+      <button class="primary" type="submit">Publish Review</button>
+    </form>
+  </dialog>
+</body>
+</html>
