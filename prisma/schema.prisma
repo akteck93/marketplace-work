@@ -1,0 +1,95 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  CLIENT
+  FREELANCER
+  ADMIN
+}
+
+enum JobType {
+  FIXED_PRICE
+  HOURLY
+}
+
+enum ContractStatus {
+  PENDING
+  ACTIVE
+  IN_REVIEW
+  COMPLETED
+  DISPUTED
+}
+
+model User {
+  id                    String     @id @default(cuid())
+  email                 String     @unique
+  password              String?
+  name                  String
+  role                  Role       @default(FREELANCER)
+  avatarUrl             String?
+  bio                   String?
+  hourlyRate            Float?
+  skills                String[]
+  kycVerified           Boolean    @default(false)
+  jobsPosted            Job[]      @relation("ClientJobs")
+  proposals             Proposal[]
+  contractsAsClient     Contract[] @relation("ClientContracts")
+  contractsAsFreelancer Contract[] @relation("FreelancerContracts")
+  createdAt             DateTime   @default(now())
+}
+
+model Job {
+  id          String     @id @default(cuid())
+  title       String
+  description String
+  type        JobType
+  budget      Float
+  skills      String[]
+  clientId    String
+  client      User       @relation("ClientJobs", fields: [clientId], references: [id])
+  proposals   Proposal[]
+  contracts   Contract[]
+  createdAt   DateTime   @default(now())
+}
+
+model Proposal {
+  id           String   @id @default(cuid())
+  jobId        String
+  job          Job      @relation(fields: [jobId], references: [id])
+  freelancerId String
+  freelancer   User     @relation(fields: [freelancerId], references: [id])
+  bidAmount    Float
+  coverLetter  String
+  status       String   @default("PENDING")
+  createdAt    DateTime @default(now())
+}
+
+model Contract {
+  id           String         @id @default(cuid())
+  jobId        String
+  job          Job            @relation(fields: [jobId], references: [id])
+  clientId     String
+  client       User           @relation("ClientContracts", fields: [clientId], references: [id])
+  freelancerId String
+  freelancer   User           @relation("FreelancerContracts", fields: [freelancerId], references: [id])
+  amount       Float
+  status       ContractStatus @default(ACTIVE)
+  milestones   Milestone[]
+  createdAt    DateTime       @default(now())
+}
+
+model Milestone {
+  id         String   @id @default(cuid())
+  contractId String
+  contract   Contract @relation(fields: [contractId], references: [id])
+  title      String
+  amount     Float
+  isFunded   Boolean  @default(false)
+  isApproved Boolean  @default(false)
+}
