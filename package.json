@@ -5,9 +5,11 @@
   "type": "module",
   "description": "Production-oriented Workiffy two-sided professional services marketplace.",
   "engines": {
-    "node": ">=24 <27"
+    "node": ">=20"
   },
   "scripts": {
+    "build": "echo 'No build step required'",
+    "vercel-build": "echo 'No build step required'",
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "check": "node --check src/server.js && node --check public/app.js",
