@@ -47,18 +47,46 @@ model User {
   createdAt             DateTime   @default(now())
 }
 
+model Category {
+  id            String        @id @default(cuid())
+  name          String
+  slug          String        @unique
+  icon          String?
+  order         Int           @default(0)
+  subcategories Subcategory[]
+  jobs          Job[]
+  createdAt     DateTime      @default(now())
+}
+
+model Subcategory {
+  id          String   @id @default(cuid())
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String   @unique
+  description String?
+  jobs        Job[]
+  createdAt   DateTime @default(now())
+}
+
 model Job {
-  id          String     @id @default(cuid())
-  title       String
-  description String
-  type        JobType
-  budget      Float
-  skills      String[]
-  clientId    String
-  client      User       @relation("ClientJobs", fields: [clientId], references: [id])
-  proposals   Proposal[]
-  contracts   Contract[]
-  createdAt   DateTime   @default(now())
+  id             String       @id @default(cuid())
+  title          String
+  description    String
+  type           JobType
+  budget         Float
+  skills         String[]
+  clientId       String
+  client         User         @relation("ClientJobs", fields: [clientId], references: [id])
+  
+  categoryId     String?
+  category       Category?    @relation(fields: [categoryId], references: [id])
+  subcategoryId  String?
+  subcategory    Subcategory? @relation(fields: [subcategoryId], references: [id])
+  
+  proposals      Proposal[]
+  contracts      Contract[]
+  createdAt      DateTime     @default(now())
 }
 
 model Proposal {

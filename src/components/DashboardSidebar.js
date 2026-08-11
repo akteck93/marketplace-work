@@ -56,10 +56,7 @@ export default function DashboardSidebar({ role }) {
       {/* Logo */}
       <div className="p-6">
         <Link href="/" className="flex flex-col">
-          <span className="text-2xl font-black tracking-tight text-white flex items-center gap-1">
-            WORK<span className="text-[#ff2a5f]">IFFY</span>
-          </span>
-          <span className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">Marketplace</span>
+          <img src="/logo.png" alt="Workiffy" className="h-10 w-auto object-contain object-left" />
         </Link>
       </div>
 

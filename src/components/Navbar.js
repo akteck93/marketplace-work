@@ -14,6 +14,7 @@ import {
   PlusCircle, 
   Search,
   ChevronDown,
+  ChevronRight,
   CheckCircle2
 } from 'lucide-react';
 import { SAMPLE_NOTIFICATIONS } from '@/lib/store';
@@ -24,12 +25,36 @@ export default function Navbar({ activeRole = 'CLIENT', onRoleChange = () => {},
   const [showNotifs, setShowNotifs] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Mega Menu State
+  const [categories, setCategories] = useState([]);
+  const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
+  const [activeCategoryId, setActiveCategoryId] = useState(null);
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  useEffect(() => {
+    // Fetch categories for Mega Menu
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('/api/categories');
+        const data = await res.json();
+        if (data.success && data.categories.length > 0) {
+          setCategories(data.categories);
+          setActiveCategoryId(data.categories[0].id);
+        }
+      } catch (err) {
+        console.error("Failed to load categories for Mega Menu", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const markAllRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
+
+  const activeCategory = categories.find(c => c.id === activeCategoryId);
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-200 shadow-sm">
@@ -38,25 +63,75 @@ export default function Navbar({ activeRole = 'CLIENT', onRoleChange = () => {},
         {/* Brand Logo */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-2xl font-black tracking-tight text-black flex items-center gap-1.5">
-              WORK<span className="text-[#ff2a5f]">IFFY</span>
-            </span>
-            <span className="hidden sm:inline-block text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Marketplace</span>
+            <img src="/logo.png" alt="Workiffy" className="h-10 w-auto object-contain" />
           </Link>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-2 text-sm font-bold">
+          <nav className="hidden md:flex items-center gap-2 text-sm font-bold h-full">
+            
+            {/* Mega Menu Trigger */}
+            <div 
+              className="relative h-20 flex items-center"
+              onMouseEnter={() => setIsMegaMenuOpen(true)}
+              onMouseLeave={() => setIsMegaMenuOpen(false)}
+            >
+              <button className="px-4 py-2 rounded-full text-slate-600 hover:text-black hover:bg-slate-100 transition flex items-center gap-1.5">
+                Categories <ChevronDown className="w-4 h-4 text-slate-400" />
+              </button>
+              
+              {/* Mega Menu Dropdown */}
+              {isMegaMenuOpen && categories.length > 0 && (
+                <div className="absolute top-20 left-0 w-[800px] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden flex z-50">
+                  {/* Left Column: Main Categories */}
+                  <div className="w-1/3 bg-slate-50 border-r border-slate-200 py-4">
+                    <div className="px-4 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Categories</div>
+                    <ul className="flex flex-col">
+                      {categories.map(cat => (
+                        <li key={cat.id}>
+                          <button
+                            onMouseEnter={() => setActiveCategoryId(cat.id)}
+                            onClick={() => window.location.href = `/jobs?category=${cat.slug}`}
+                            className={`w-full text-left px-4 py-3 text-sm font-bold flex items-center justify-between transition-colors ${
+                              activeCategoryId === cat.id ? 'bg-slate-200 text-black' : 'text-slate-600 hover:bg-slate-100'
+                            }`}
+                          >
+                            {cat.name}
+                            {activeCategoryId === cat.id && <ChevronRight className="w-4 h-4 text-slate-400" />}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  {/* Right Column: Subcategories */}
+                  <div className="w-2/3 p-6 bg-white">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">
+                      {activeCategory?.name}
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                      {activeCategory?.subcategories?.map(sub => (
+                        <Link 
+                          key={sub.id} 
+                          href={`/jobs?category=${activeCategory.slug}&subcategory=${sub.slug}`}
+                          className="group block p-3 rounded-xl hover:bg-slate-50 transition-colors"
+                        >
+                          <h4 className="text-sm font-bold text-black group-hover:text-[#ff2a5f] transition-colors">{sub.name}</h4>
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                            {sub.description || `Find top talent in ${sub.name}`}
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <Link href="/jobs" className="px-4 py-2 rounded-full text-slate-600 hover:text-black hover:bg-slate-100 transition">
               Find Work
             </Link>
             <Link href="/jobs/create" className="px-4 py-2 rounded-full text-slate-600 hover:text-black hover:bg-slate-100 transition flex items-center gap-1.5">
               Post a Job
-            </Link>
-            <Link href="/dashboard/client" className="px-4 py-2 rounded-full text-slate-600 hover:text-black hover:bg-slate-100 transition">
-              Client Portal
-            </Link>
-            <Link href="/dashboard/freelancer" className="px-4 py-2 rounded-full text-slate-600 hover:text-black hover:bg-slate-100 transition">
-              Freelancer Dashboard
             </Link>
           </nav>
         </div>
@@ -156,7 +231,7 @@ export default function Navbar({ activeRole = 'CLIENT', onRoleChange = () => {},
           {session ? (
             <div className="flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 border-l border-slate-200 pl-2 sm:pl-3">
               <Link
-                href="/dashboard"
+                href={activeRole === 'CLIENT' ? '/dashboard/client' : activeRole === 'FREELANCER' ? '/dashboard/freelancer' : '/admin'}
                 className="block"
               >
                 <img
