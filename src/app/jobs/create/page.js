@@ -29,17 +29,44 @@ export default function CreateJobPage() {
 
   // Form Fields
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('3D & WebGL Development');
-  const [type, setType] = useState('FIXED_PRICE'); // 'FIXED_PRICE' | 'HOURLY'
-  const [budget, setBudget] = useState(3500);
+  const [category, setCategory] = useState('');
+  const [subcategory, setSubcategory] = useState('');
+  const [type, setType] = useState('FIXED_PRICE');
+  const [budget, setBudget] = useState('');
   const [description, setDescription] = useState('');
   const [skillInput, setSkillInput] = useState('');
-  const [skills, setSkills] = useState(['React Three Fiber', 'Next.js 15', 'Three.js']);
+  const [skills, setSkills] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Dynamic Categories
+  const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
   
   // Payment State
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
+
+  useEffect(() => {
+    // Fetch dynamic categories from DB
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('/api/categories');
+        const data = await res.json();
+        if (data.success && data.categories.length > 0) {
+          setCategories(data.categories);
+          const firstCat = data.categories[0];
+          setCategory(firstCat.id);
+          setSubcategories(firstCat.subcategories || []);
+          if (firstCat.subcategories?.length > 0) {
+            setSubcategory(firstCat.subcategories[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories', err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     // Check if user has an active subscription
@@ -64,6 +91,14 @@ export default function CreateJobPage() {
     }
   }, [session]);
 
+  const handleCategoryChange = (categoryId) => {
+    setCategory(categoryId);
+    const found = categories.find(c => c.id === categoryId);
+    const subs = found?.subcategories || [];
+    setSubcategories(subs);
+    setSubcategory(subs.length > 0 ? subs[0].id : '');
+  };
+
   const addSkill = () => {
     if (skillInput.trim() && !skills.includes(skillInput.trim())) {
       setSkills([...skills, skillInput.trim()]);
@@ -83,7 +118,8 @@ export default function CreateJobPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
-          category,
+          categoryId: category || undefined,
+          subcategoryId: subcategory || undefined,
           type,
           budget: parseFloat(budget),
           description,
@@ -253,21 +289,38 @@ export default function CreateJobPage() {
               />
             </div>
 
-            {/* Category & Type */}
+            {/* Category, Subcategory & Type */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1">Category</label>
                 <select
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-black focus:outline-none focus:border-black"
                 >
-                  <option value="3D & WebGL Development">3D & WebGL Development</option>
-                  <option value="Full Stack & Payments">Full Stack & Payments</option>
-                  <option value="UI/UX & Frontend">UI/UX & Frontend</option>
+                  {categories.length === 0 && (
+                    <option disabled value="">Loading categories...</option>
+                  )}
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
                 </select>
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-1">Subcategory <span className="text-slate-400 font-normal">(optional)</span></label>
+                <select
+                  value={subcategory}
+                  onChange={(e) => setSubcategory(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-black focus:outline-none focus:border-black"
+                >
+                  <option value="">-- Select Subcategory --</option>
+                  {subcategories.map(sub => (
+                    <option key={sub.id} value={sub.id}>{sub.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1">Budget Type</label>
                 <div className="grid grid-cols-2 gap-2">

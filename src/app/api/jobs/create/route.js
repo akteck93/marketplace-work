@@ -13,20 +13,28 @@ export async function POST(request) {
 
     const body = await request.json();
     
-    // Create job in the database
+    // Create job in the database with category and subcategory links
     const newJob = await prisma.job.create({
       data: {
         title: body.title,
         description: body.description,
         type: body.type || 'FIXED_PRICE',
         budget: parseFloat(body.budget) || 1000,
-        skills: body.skills || ['React Three Fiber', 'Next.js 15'],
-        clientId: session.user.id
+        skills: body.skills || [],
+        clientId: session.user.id,
+        // Link to dynamic category if provided
+        ...(body.categoryId ? { categoryId: body.categoryId } : {}),
+        ...(body.subcategoryId ? { subcategoryId: body.subcategoryId } : {}),
+      },
+      include: {
+        category: true,
+        subcategory: true,
       }
     });
 
     return NextResponse.json({ success: true, job: newJob });
   } catch (error) {
+    console.error('Create job error:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
 }
