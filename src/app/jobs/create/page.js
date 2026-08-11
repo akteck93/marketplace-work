@@ -289,7 +289,7 @@ export default function CreateJobPage() {
               />
             </div>
 
-            {/* Category, Subcategory & Type */}
+            {/* Category & Subcategory */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1">Category</label>
@@ -321,32 +321,33 @@ export default function CreateJobPage() {
                 </select>
               </div>
             </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">Budget Type</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setType('FIXED_PRICE')}
-                    className={`py-2 rounded-xl text-xs font-bold border transition ${
-                      type === 'FIXED_PRICE'
-                        ? 'bg-black text-white border-black'
-                        : 'bg-slate-50 border-slate-200 text-slate-600'
-                    }`}
-                  >
-                    Fixed Price
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setType('HOURLY')}
-                    className={`py-2 rounded-xl text-xs font-bold border transition ${
-                      type === 'HOURLY'
-                        ? 'bg-black text-white border-black'
-                        : 'bg-slate-50 border-slate-200 text-slate-600'
-                    }`}
-                  >
-                    Hourly Rate
-                  </button>
-                </div>
+
+            {/* Budget Type */}
+            <div>
+              <label className="block text-xs font-bold text-slate-800 mb-1">Budget Type</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setType('FIXED_PRICE')}
+                  className={`py-2 rounded-xl text-xs font-bold border transition ${
+                    type === 'FIXED_PRICE'
+                      ? 'bg-black text-white border-black'
+                      : 'bg-slate-50 border-slate-200 text-slate-600'
+                  }`}
+                >
+                  Fixed Price
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setType('HOURLY')}
+                  className={`py-2 rounded-xl text-xs font-bold border transition ${
+                    type === 'HOURLY'
+                      ? 'bg-black text-white border-black'
+                      : 'bg-slate-50 border-slate-200 text-slate-600'
+                  }`}
+                >
+                  Hourly Rate
+                </button>
               </div>
             </div>
 
