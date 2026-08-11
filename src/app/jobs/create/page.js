@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ChatDrawer from '@/components/ChatDrawer';
@@ -13,13 +13,19 @@ import {
   Sparkles, 
   CheckCircle2, 
   ShieldCheck,
-  ArrowRight
+  ArrowRight,
+  CreditCard
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import Script from 'next/script';
+import Link from 'next/link';
 
 export default function CreateJobPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
 
   // Form Fields
   const [title, setTitle] = useState('');
@@ -30,6 +36,33 @@ export default function CreateJobPage() {
   const [skillInput, setSkillInput] = useState('');
   const [skills, setSkills] = useState(['React Three Fiber', 'Next.js 15', 'Three.js']);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Payment State
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false);
+
+  useEffect(() => {
+    // Check if user has an active subscription
+    const checkSubscription = async () => {
+      try {
+        const res = await fetch('/api/user/profile');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.subscriptionActiveUntil) {
+            const expDate = new Date(data.subscriptionActiveUntil);
+            if (expDate > new Date()) {
+              setHasSubscription(true);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check subscription", err);
+      }
+    };
+    if (session) {
+      checkSubscription();
+    }
+  }, [session]);
 
   const addSkill = () => {
     if (skillInput.trim() && !skills.includes(skillInput.trim())) {
@@ -42,10 +75,8 @@ export default function CreateJobPage() {
     setSkills(skills.filter(s => s !== skillToRemove));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const executeJobPost = async () => {
     setIsSubmitting(true);
-
     try {
       const res = await fetch('/api/jobs/create', {
         method: 'POST',
@@ -54,7 +85,7 @@ export default function CreateJobPage() {
           title,
           category,
           type,
-          budget,
+          budget: parseFloat(budget),
           description,
           skills
         })
@@ -64,6 +95,9 @@ export default function CreateJobPage() {
         setTimeout(() => {
           router.push('/dashboard/client');
         }, 800);
+      } else {
+        alert("Failed to post job.");
+        setIsSubmitting(false);
       }
     } catch (err) {
       console.error(err);
@@ -71,48 +105,162 @@ export default function CreateJobPage() {
     }
   };
 
+  const handlePreSubmit = (e) => {
+    e.preventDefault();
+    if (hasSubscription) {
+      executeJobPost();
+    } else {
+      setShowPaywall(true);
+    }
+  };
+
+  const handlePayment = async (amountUSD, isSubscription) => {
+    if (!isRazorpayLoaded) {
+      alert("Razorpay SDK is not loaded yet!");
+      return;
+    }
+    
+    // Amount is in currency subunits (paise for INR). Assuming 1 USD = 80 INR roughly for demo.
+    const amountINR = amountUSD * 80 * 100;
+
+    const options = {
+      key: "rzp_test_YourTestKey", // Mock Key
+      amount: amountINR.toString(), 
+      currency: "INR",
+      name: "Workiffy Marketplace",
+      description: isSubscription ? "1 Month Client Subscription" : "Single Job Post Fee",
+      image: "https://marketplace-work-rose.vercel.app/favicon.ico",
+      handler: async function (response) {
+        alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
+        
+        if (isSubscription) {
+          // Update subscription in backend
+          await fetch('/api/user/subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan: 'CLIENT_PRO', durationDays: 30 })
+          });
+          setHasSubscription(true);
+        }
+        
+        setShowPaywall(false);
+        executeJobPost();
+      },
+      prefill: {
+        name: session?.user?.name || "Client User",
+        email: session?.user?.email || "client@example.com",
+      },
+      theme: {
+        color: "#ff2a5f", // Red theme for Razorpay
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 bg-grid-pattern">
+    <div className="min-h-screen flex flex-col bg-white relative">
+      <Script 
+        src="https://checkout.razorpay.com/v1/checkout.js" 
+        onLoad={() => setIsRazorpayLoaded(true)} 
+      />
+      
       <Navbar
         activeRole="CLIENT"
         onRoleChange={() => {}}
         onToggleChat={() => setIsChatOpen(true)}
       />
 
+      {/* Paywall Modal */}
+      {showPaywall && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 max-w-lg w-full shadow-2xl relative">
+            <button 
+              onClick={() => setShowPaywall(false)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-black"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30">
+                <CreditCard className="w-8 h-8 text-[#ff2a5f]" />
+              </div>
+              <h2 className="text-2xl font-bold text-black mb-2">Publish Your Contract</h2>
+              <p className="text-sm text-slate-600">Choose a payment option to post this job to the marketplace.</p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-5 rounded-2xl border border-slate-200 hover:border-black bg-slate-50 transition cursor-pointer flex justify-between items-center group" onClick={() => handlePayment(1, false)}>
+                <div>
+                  <h3 className="font-bold text-black text-lg">Single Post</h3>
+                  <p className="text-xs text-slate-500 mt-1">Pay once for this specific job posting.</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-black text-black">$1</span>
+                </div>
+              </div>
+
+              <div className="p-5 rounded-2xl border-2 border-[#ff2a5f] bg-red-50 transition cursor-pointer flex justify-between items-center relative overflow-hidden" onClick={() => handlePayment(5, true)}>
+                <div className="absolute top-0 right-0 bg-[#ff2a5f] text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg">RECOMMENDED</div>
+                <div>
+                  <h3 className="font-bold text-[#ff2a5f] text-lg">Pro Subscription</h3>
+                  <p className="text-xs text-slate-600 mt-1">Unlimited job posts for 30 days.</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-black text-black">$5<span className="text-xs text-slate-500 font-normal">/mo</span></span>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-200 mt-4 text-center">
+                <p className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">Or Pay via PayPal</p>
+                <a 
+                  href="https://paypal.me/YOUR_PAYPAL_LINK_HERE" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#003087] hover:bg-[#001c56] text-white font-bold text-sm transition"
+                >
+                  Pay with PayPal
+                </a>
+                <p className="text-[10px] text-slate-400 mt-2">After paying via PayPal, contact admin to verify.</p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="flex-1 max-w-3xl mx-auto px-4 py-10 w-full space-y-8">
         
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel text-xs font-mono text-cyan-400 border border-cyan-500/30">
-            <Sparkles className="w-3.5 h-3.5" /> Client Job Posting Engine
-          </div>
-          <h1 className="text-3xl font-extrabold text-white">Post a New 3D Contract</h1>
-          <p className="text-xs text-slate-400">Reach over 1,840+ verified 3D & Full Stack developers</p>
+          <h1 className="text-3xl font-extrabold text-black">Post a New Contract</h1>
+          <p className="text-xs text-slate-500">Reach over 1,840+ verified top-tier developers</p>
         </div>
 
-        <div className="glass-panel p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+          <form onSubmit={handlePreSubmit} className="space-y-6">
             
             {/* Title */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Contract Title</label>
+              <label className="block text-xs font-bold text-slate-800 mb-1">Contract Title</label>
               <input
                 type="text"
                 required
-                placeholder="e.g. Build Interactive 3D Product Visualizer with R3F & Next.js 15"
+                placeholder="e.g. Build Interactive 3D Product Visualizer"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-black placeholder-slate-400 focus:outline-none focus:border-black"
               />
             </div>
 
             {/* Category & Type */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Category</label>
+                <label className="block text-xs font-bold text-slate-800 mb-1">Category</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-black focus:outline-none focus:border-black"
                 >
                   <option value="3D & WebGL Development">3D & WebGL Development</option>
                   <option value="Full Stack & Payments">Full Stack & Payments</option>
@@ -121,15 +269,15 @@ export default function CreateJobPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Budget Type</label>
+                <label className="block text-xs font-bold text-slate-800 mb-1">Budget Type</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setType('FIXED_PRICE')}
                     className={`py-2 rounded-xl text-xs font-bold border transition ${
                       type === 'FIXED_PRICE'
-                        ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400'
-                        : 'bg-slate-900 border-white/10 text-slate-400'
+                        ? 'bg-black text-white border-black'
+                        : 'bg-slate-50 border-slate-200 text-slate-600'
                     }`}
                   >
                     Fixed Price
@@ -139,8 +287,8 @@ export default function CreateJobPage() {
                     onClick={() => setType('HOURLY')}
                     className={`py-2 rounded-xl text-xs font-bold border transition ${
                       type === 'HOURLY'
-                        ? 'bg-violet-500/20 border-violet-500 text-violet-400'
-                        : 'bg-slate-900 border-white/10 text-slate-400'
+                        ? 'bg-black text-white border-black'
+                        : 'bg-slate-50 border-slate-200 text-slate-600'
                     }`}
                   >
                     Hourly Rate
@@ -151,7 +299,7 @@ export default function CreateJobPage() {
 
             {/* Budget */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-xs font-bold text-slate-800 mb-1">
                 {type === 'FIXED_PRICE' ? 'Estimated Fixed Budget ($)' : 'Hourly Rate Cap ($/hr)'}
               </label>
               <input
@@ -159,39 +307,39 @@ export default function CreateJobPage() {
                 required
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs font-bold text-emerald-400 focus:outline-none focus:border-cyan-500"
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-black focus:outline-none focus:border-black"
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Job Description & Scope</label>
+              <label className="block text-xs font-bold text-slate-800 mb-1">Job Description & Scope</label>
               <textarea
                 rows={5}
                 required
-                placeholder="Describe project deliverables, 3D performance targets, GLTF model requirements, and timeline..."
+                placeholder="Describe project deliverables and requirements..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-black placeholder-slate-400 focus:outline-none focus:border-black"
               />
             </div>
 
             {/* Required Skills Tagging */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Required Skills Tagging</label>
+              <label className="block text-xs font-bold text-slate-800 mb-1">Required Skills Tagging</label>
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
-                  placeholder="e.g. GLSL Shaders, Prisma"
+                  placeholder="e.g. Next.js"
                   value={skillInput}
                   onChange={(e) => setSkillInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }}
-                  className="flex-1 px-3.5 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-white"
+                  className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm text-black focus:outline-none focus:border-black"
                 />
                 <button
                   type="button"
                   onClick={addSkill}
-                  className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center gap-1"
+                  className="px-4 py-2 rounded-xl bg-black hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1 transition"
                 >
                   <Plus className="w-4 h-4" /> Add
                 </button>
@@ -199,9 +347,9 @@ export default function CreateJobPage() {
 
               <div className="flex flex-wrap gap-2">
                 {skills.map((s, idx) => (
-                  <span key={idx} className="px-3 py-1 rounded-lg bg-slate-900 border border-cyan-500/30 text-xs text-cyan-300 flex items-center gap-1.5">
+                  <span key={idx} className="px-3 py-1 rounded-lg bg-red-50 border border-red-200 text-xs font-semibold text-red-700 flex items-center gap-1.5">
                     {s}
-                    <button type="button" onClick={() => removeSkill(s)} className="text-slate-500 hover:text-red-400">
+                    <button type="button" onClick={() => removeSkill(s)} className="text-red-400 hover:text-red-600">
                       <X className="w-3 h-3" />
                     </button>
                   </span>
@@ -209,22 +357,16 @@ export default function CreateJobPage() {
               </div>
             </div>
 
-            {/* Escrow Notice */}
-            <div className="p-4 rounded-2xl bg-slate-900/90 border border-emerald-500/30 flex items-center gap-3 text-xs text-emerald-300">
-              <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-              <span>Stripe Connect Escrow will automatically secure funds once you accept a freelancer proposal.</span>
-            </div>
-
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-cyan-400 to-emerald-400 text-slate-950 font-extrabold text-xs shadow-xl shadow-cyan-500/20 hover:brightness-110 transition flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3.5 rounded-xl bg-[#ff2a5f] hover:bg-[#e01b4a] text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
             >
               {isSubmitting ? (
                 <span>Publishing Job Contract...</span>
               ) : (
                 <>
-                  <span>Publish Contract to Marketplace</span>
+                  <span>{hasSubscription ? "Publish Contract to Marketplace" : "Pay & Publish Contract"}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}

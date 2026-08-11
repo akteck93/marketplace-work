@@ -31,16 +31,19 @@ model User {
   email                 String     @unique
   password              String?
   name                  String
+  phone                 String?
   role                  Role       @default(FREELANCER)
   avatarUrl             String?
   bio                   String?
   hourlyRate            Float?
   skills                String[]
   kycVerified           Boolean    @default(false)
+  subscriptionActiveUntil DateTime?
   jobsPosted            Job[]      @relation("ClientJobs")
   proposals             Proposal[]
   contractsAsClient     Contract[] @relation("ClientContracts")
   contractsAsFreelancer Contract[] @relation("FreelancerContracts")
+  messagesSent          Message[]  @relation("UserMessages")
   createdAt             DateTime   @default(now())
 }
 
@@ -81,6 +84,7 @@ model Contract {
   amount       Float
   status       ContractStatus @default(ACTIVE)
   milestones   Milestone[]
+  messages     Message[]
   createdAt    DateTime       @default(now())
 }
 
@@ -92,4 +96,14 @@ model Milestone {
   amount     Float
   isFunded   Boolean  @default(false)
   isApproved Boolean  @default(false)
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  contractId String
+  contract   Contract @relation(fields: [contractId], references: [id])
+  senderId   String
+  sender     User     @relation("UserMessages", fields: [senderId], references: [id])
+  text       String
+  createdAt  DateTime @default(now())
 }

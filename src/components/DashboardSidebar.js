@@ -52,14 +52,14 @@ export default function DashboardSidebar({ role }) {
   const links = role === "CLIENT" ? clientLinks : freelancerLinks;
 
   return (
-    <aside className="w-64 bg-[#0a1128] text-white flex flex-col h-full sticky top-0 border-r border-slate-800">
+    <aside className="w-64 bg-black text-white flex flex-col h-full sticky top-0 border-r border-slate-900">
       {/* Logo */}
       <div className="p-6">
         <Link href="/" className="flex flex-col">
           <span className="text-2xl font-black tracking-tight text-white flex items-center gap-1">
-            WORKIFFY
+            WORK<span className="text-[#ff2a5f]">IFFY</span>
           </span>
-          <span className="text-[10px] text-slate-400 mt-1">Your Skills. Global Opportunities.</span>
+          <span className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">Marketplace</span>
         </Link>
       </div>
 
@@ -73,18 +73,18 @@ export default function DashboardSidebar({ role }) {
             <Link
               key={link.name}
               href={link.href}
-              className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-bold transition-colors ${
                 isActive 
                   ? "bg-[#ff2a5f] text-white" 
-                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+                  : "text-slate-400 hover:bg-slate-900 hover:text-white"
               }`}
             >
               <div className="flex items-center gap-3">
-                <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
+                <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-500"}`} />
                 {link.name}
               </div>
               {link.badge && (
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${isActive ? "bg-white/20" : "bg-[#6c5ce7] text-white"}`}>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${isActive ? "bg-white/20" : "bg-[#ff2a5f] text-white"}`}>
                   {link.badge}
                 </span>
               )}
@@ -95,24 +95,24 @@ export default function DashboardSidebar({ role }) {
 
       {/* Upgrade Banner (for Client) */}
       {role === "CLIENT" && (
-        <div className="mx-4 my-4 p-4 rounded-xl bg-gradient-to-br from-[#1a295c] to-[#0a1128] border border-white/5">
-          <Award className="w-6 h-6 text-yellow-500 mb-2" />
-          <h4 className="text-sm font-bold text-white mb-1">Hire Faster, Get Better</h4>
+        <div className="mx-4 my-4 p-4 rounded-xl bg-slate-900 border border-slate-800">
+          <Award className="w-6 h-6 text-[#ff2a5f] mb-2" />
+          <h4 className="text-sm font-bold text-white mb-1">Hire Faster</h4>
           <p className="text-[10px] text-slate-400 mb-3 leading-relaxed">Upgrade to Premium and connect with top-rated service providers.</p>
-          <button className="w-full py-2 bg-[#2d5bff] hover:bg-[#1a47e6] text-white text-xs font-bold rounded-lg transition-colors">
+          <button className="w-full py-2 bg-[#ff2a5f] hover:bg-[#e01b4a] text-white text-xs font-bold rounded-lg transition-colors">
             Upgrade Now
           </button>
         </div>
       )}
 
       {/* Footer Links */}
-      <div className="p-4 border-t border-white/10 space-y-1">
-        <Link href="/help" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5">
-          <HelpCircle className="w-4 h-4 text-slate-400" /> Help Center
+      <div className="p-4 border-t border-slate-900 space-y-1">
+        <Link href="/help" className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-900">
+          <HelpCircle className="w-4 h-4 text-slate-500" /> Help Center
         </Link>
         <button 
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#ff7675] hover:text-[#ff4757] transition-colors rounded-lg hover:bg-[#ff7675]/10"
+          className="w-full flex items-center gap-3 px-3 py-2 text-sm font-bold text-red-500 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
         >
           <LogOut className="w-4 h-4" /> Logout
         </button>

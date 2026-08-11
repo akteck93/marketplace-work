@@ -32,85 +32,73 @@ export default function Navbar({ activeRole = 'CLIENT', onRoleChange = () => {},
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full glass-panel border-b border-white/10 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
         
         {/* Brand Logo */}
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-500 via-violet-600 to-emerald-400 p-0.5 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform duration-300">
-              <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-cyan-400 animate-pulse" />
-              </div>
-            </div>
-            <div>
-              <span className="text-xl font-extrabold tracking-tight text-white flex items-center gap-1.5">
-                Workiffy<span className="text-cyan-400 text-xs px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/30">3D</span>
-              </span>
-              <p className="text-[10px] text-slate-400 font-mono">Upwork-Grade 3D Platform</p>
-            </div>
+          <Link href="/" className="flex items-center gap-2 group">
+            <span className="text-2xl font-black tracking-tight text-black flex items-center gap-1.5">
+              WORK<span className="text-[#ff2a5f]">IFFY</span>
+            </span>
+            <span className="hidden sm:inline-block text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Marketplace</span>
           </Link>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
-            <Link href="/jobs" className="px-3.5 py-2 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition">
+          <nav className="hidden md:flex items-center gap-2 text-sm font-bold">
+            <Link href="/jobs" className="px-4 py-2 rounded-full text-slate-600 hover:text-black hover:bg-slate-100 transition">
               Find Work
             </Link>
-            <Link href="/jobs/create" className="px-3.5 py-2 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition flex items-center gap-1.5">
-              <PlusCircle className="w-4 h-4 text-cyan-400" />
+            <Link href="/jobs/create" className="px-4 py-2 rounded-full text-slate-600 hover:text-black hover:bg-slate-100 transition flex items-center gap-1.5">
               Post a Job
             </Link>
-            <Link href="/dashboard/client" className="px-3.5 py-2 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition">
+            <Link href="/dashboard/client" className="px-4 py-2 rounded-full text-slate-600 hover:text-black hover:bg-slate-100 transition">
               Client Portal
             </Link>
-            <Link href="/dashboard/freelancer" className="px-3.5 py-2 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition">
-              3D Dashboard
-            </Link>
-            <Link href="/admin" className="px-3.5 py-2 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              Super Admin
+            <Link href="/dashboard/freelancer" className="px-4 py-2 rounded-full text-slate-600 hover:text-black hover:bg-slate-100 transition">
+              Freelancer Dashboard
             </Link>
           </nav>
         </div>
 
         {/* Right Controls & Mobile Toggle */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-4">
           
           {/* Active Role Selector Pill */}
           <div className="relative hidden sm:block">
             <button
               onClick={() => setShowRoleMenu(!showRoleMenu)}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/30 text-xs font-semibold text-cyan-300 hover:border-cyan-400 transition cursor-pointer shadow-md"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 border border-slate-200 text-xs font-bold text-slate-600 hover:border-slate-300 transition cursor-pointer"
             >
               <span className={`w-2 h-2 rounded-full ${
-                activeRole === 'CLIENT' ? 'bg-cyan-400' : activeRole === 'FREELANCER' ? 'bg-violet-400' : 'bg-emerald-400'
+                activeRole === 'CLIENT' ? 'bg-[#ff2a5f]' : activeRole === 'FREELANCER' ? 'bg-black' : 'bg-emerald-500'
               }`}></span>
-              <span>Role: <strong className="text-white">{activeRole}</strong></span>
+              <span>Role: <strong className="text-black">{activeRole}</strong></span>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
 
             {showRoleMenu && (
-              <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-white/10 shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2">
+              <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white border border-slate-200 shadow-xl p-2 z-50 animate-in fade-in slide-in-from-top-2">
                 <button
                   onClick={() => { onRoleChange('CLIENT'); setShowRoleMenu(false); }}
-                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-400 flex items-center justify-between"
+                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 flex items-center justify-between"
                 >
                   <span>Client (Employer)</span>
-                  {activeRole === 'CLIENT' && <CheckCircle2 className="w-4 h-4 text-cyan-400" />}
+                  {activeRole === 'CLIENT' && <CheckCircle2 className="w-4 h-4 text-[#ff2a5f]" />}
                 </button>
                 <button
                   onClick={() => { onRoleChange('FREELANCER'); setShowRoleMenu(false); }}
-                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-violet-500/10 hover:text-violet-400 flex items-center justify-between"
+                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 flex items-center justify-between"
                 >
                   <span>Freelancer (Talent)</span>
-                  {activeRole === 'FREELANCER' && <CheckCircle2 className="w-4 h-4 text-violet-400" />}
+                  {activeRole === 'FREELANCER' && <CheckCircle2 className="w-4 h-4 text-black" />}
                 </button>
                 <button
                   onClick={() => { onRoleChange('ADMIN'); setShowRoleMenu(false); }}
-                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-emerald-500/10 hover:text-emerald-400 flex items-center justify-between"
+                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 flex items-center justify-between"
                 >
-                  <span>Super Admin Console</span>
-                  {activeRole === 'ADMIN' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                  <span>Super Admin</span>
+                  {activeRole === 'ADMIN' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
                 </button>
               </div>
             )}
@@ -119,44 +107,44 @@ export default function Navbar({ activeRole = 'CLIENT', onRoleChange = () => {},
           {/* Realtime Chat Button */}
           <button
             onClick={onToggleChat}
-            className="relative p-2.5 rounded-2xl bg-slate-900/80 border border-white/10 text-slate-300 hover:text-cyan-400 hover:border-cyan-500/40 transition cursor-pointer"
+            className="relative p-2.5 rounded-full bg-slate-50 text-slate-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
             title="Realtime Chat Drawer"
           >
             <MessageSquare className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#ff2a5f]"></span>
           </button>
 
           {/* Notifications Dropdown */}
           <div className="relative">
             <button
               onClick={() => setShowNotifs(!showNotifs)}
-              className="relative p-2.5 rounded-2xl bg-slate-900/80 border border-white/10 text-slate-300 hover:text-cyan-400 hover:border-cyan-500/40 transition cursor-pointer"
+              className="relative p-2.5 rounded-full bg-slate-50 text-slate-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
               title="System Notifications"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-violet-600 text-white text-[10px] font-bold flex items-center justify-center border-2 border-slate-950">
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#ff2a5f] text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
                   {unreadCount}
                 </span>
               )}
             </button>
 
             {showNotifs && (
-              <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-white/10 shadow-2xl p-4 z-50">
-                <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                  <h4 className="text-sm font-bold text-white">System Notifications</h4>
-                  <button onClick={markAllRead} className="text-xs text-cyan-400 hover:underline">
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white border border-slate-200 shadow-2xl p-4 z-50">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <h4 className="text-sm font-bold text-black">Notifications</h4>
+                  <button onClick={markAllRead} className="text-xs text-[#ff2a5f] hover:underline font-bold">
                     Mark all read
                   </button>
                 </div>
                 <div className="mt-3 space-y-2 max-h-72 overflow-y-auto pr-1">
                   {notifications.map(n => (
                     <div key={n.id} className={`p-3 rounded-xl border text-xs ${
-                      n.read ? 'bg-slate-950/40 border-white/5 text-slate-400' : 'bg-cyan-950/20 border-cyan-500/30 text-slate-200'
+                      n.read ? 'bg-slate-50 border-slate-100 text-slate-500' : 'bg-red-50 border-red-100 text-slate-800'
                     }`}>
-                      <div className="font-semibold text-cyan-300">{n.title}</div>
-                      <div className="mt-1">{n.message}</div>
-                      <div className="mt-1 text-[10px] text-slate-400">{n.time}</div>
+                      <div className="font-bold text-black">{n.title}</div>
+                      <div className="mt-1 leading-relaxed">{n.message}</div>
+                      <div className="mt-1 text-[10px] text-slate-400 font-medium">{n.time}</div>
                     </div>
                   ))}
                 </div>
@@ -166,28 +154,22 @@ export default function Navbar({ activeRole = 'CLIENT', onRoleChange = () => {},
 
           {/* User Auth Section */}
           {session ? (
-            <div className="flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 border-l border-white/10 pl-2 sm:pl-3">
+            <div className="flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 border-l border-slate-200 pl-2 sm:pl-3">
               <Link
                 href="/dashboard"
-                className="flex items-center gap-2 p-1 rounded-2xl bg-slate-900/80 border border-white/10 hover:border-cyan-500/40 transition"
+                className="block"
               >
                 <img
                   src={session.user.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80"}
                   alt="User"
-                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl object-cover"
+                  className="w-9 h-9 rounded-full object-cover border-2 border-slate-200 hover:border-black transition"
                 />
               </Link>
-              <button 
-                onClick={() => signOut()}
-                className="hidden sm:block text-xs font-bold text-slate-400 hover:text-white transition"
-              >
-                Sign Out
-              </button>
             </div>
           ) : (
             <Link
               href="/login"
-              className="ml-1 sm:ml-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-[10px] sm:text-xs font-bold hover:bg-cyan-500 hover:text-slate-950 transition"
+              className="ml-1 sm:ml-2 px-5 py-2 rounded-full bg-black text-white text-sm font-bold hover:bg-slate-800 transition"
             >
               Sign In
             </Link>
@@ -195,7 +177,7 @@ export default function Navbar({ activeRole = 'CLIENT', onRoleChange = () => {},
 
           {/* Mobile Menu Toggle */}
           <button 
-            className="md:hidden p-1.5 text-slate-300 hover:text-cyan-400"
+            className="md:hidden p-1.5 text-slate-500 hover:text-black"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -212,24 +194,24 @@ export default function Navbar({ activeRole = 'CLIENT', onRoleChange = () => {},
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-slate-950/95 backdrop-blur-xl border-t border-white/10 p-4">
+        <div className="md:hidden bg-white border-t border-slate-200 p-4 shadow-lg absolute w-full left-0">
           <nav className="flex flex-col gap-2">
-            <Link href="/jobs" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition text-sm font-medium">
+            <Link href="/jobs" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-slate-700 hover:text-black hover:bg-slate-50 transition text-sm font-bold">
               Find Work
             </Link>
-            <Link href="/jobs/create" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition text-sm font-medium flex items-center gap-2">
-              <PlusCircle className="w-4 h-4 text-cyan-400" /> Post a Job
+            <Link href="/jobs/create" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-slate-700 hover:text-black hover:bg-slate-50 transition text-sm font-bold flex items-center gap-2">
+              <PlusCircle className="w-4 h-4" /> Post a Job
             </Link>
-            <Link href="/dashboard/client" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition text-sm font-medium">
+            <Link href="/dashboard/client" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-slate-700 hover:text-black hover:bg-slate-50 transition text-sm font-bold">
               Client Portal
             </Link>
-            <Link href="/dashboard/freelancer" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition text-sm font-medium">
-              3D Dashboard
+            <Link href="/dashboard/freelancer" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-slate-700 hover:text-black hover:bg-slate-50 transition text-sm font-bold">
+              Freelancer Dashboard
             </Link>
             {session && (
               <button 
                 onClick={() => { signOut(); setIsMobileMenuOpen(false); }}
-                className="text-left px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition text-sm font-medium"
+                className="text-left px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition text-sm font-bold"
               >
                 Sign Out
               </button>

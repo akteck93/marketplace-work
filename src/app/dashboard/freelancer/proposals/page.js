@@ -65,9 +65,15 @@ export default async function FreelancerProposalsPage() {
                   {proposals.map((p) => (
                     <tr key={p.id} className="hover:bg-slate-50/60 transition">
                       <td className="py-4 pr-4">
-                        <Link href={`/jobs/${p.jobId}`} className="font-bold text-slate-900 hover:text-[#2d5bff]">
-                          {p.job?.title || 'Job Listing'}
-                        </Link>
+                        {p.status === 'ACCEPTED' ? (
+                          <Link href={`/dashboard/freelancer/workroom/${p.jobId}`} className="font-bold text-[#2d5bff] hover:underline flex items-center gap-1">
+                            {p.job?.title || 'Job Listing'} <ArrowRight className="w-3 h-3" />
+                          </Link>
+                        ) : (
+                          <Link href={`/jobs/${p.jobId}`} className="font-bold text-slate-900 hover:text-[#2d5bff]">
+                            {p.job?.title || 'Job Listing'}
+                          </Link>
+                        )}
                       </td>
                       <td className="py-4 pr-4 font-black text-emerald-600">${p.bidAmount}</td>
                       <td className="py-4 pr-4 text-slate-600 italic line-clamp-2 max-w-md">
