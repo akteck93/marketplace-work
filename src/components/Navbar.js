@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSession, signOut } from 'next-auth/react';
 import { 
   Sparkles, 
   MessageSquare, 
@@ -18,9 +19,11 @@ import {
 import { SAMPLE_NOTIFICATIONS } from '@/lib/store';
 
 export default function Navbar({ activeRole = 'CLIENT', onRoleChange = () => {}, onToggleChat = () => {} }) {
+  const { data: session } = useSession();
   const [notifications, setNotifications] = useState(SAMPLE_NOTIFICATIONS);
   const [showNotifs, setShowNotifs] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -70,11 +73,11 @@ export default function Navbar({ activeRole = 'CLIENT', onRoleChange = () => {},
           </nav>
         </div>
 
-        {/* Right Controls */}
-        <div className="flex items-center gap-3">
+        {/* Right Controls & Mobile Toggle */}
+        <div className="flex items-center gap-2 sm:gap-3">
           
           {/* Active Role Selector Pill */}
-          <div className="relative">
+          <div className="relative hidden sm:block">
             <button
               onClick={() => setShowRoleMenu(!showRoleMenu)}
               className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/30 text-xs font-semibold text-cyan-300 hover:border-cyan-400 transition cursor-pointer shadow-md"
@@ -161,20 +164,79 @@ export default function Navbar({ activeRole = 'CLIENT', onRoleChange = () => {},
             )}
           </div>
 
-          {/* User Profile Avatar */}
-          <Link
-            href="/onboarding"
-            className="flex items-center gap-2 p-1 rounded-2xl bg-slate-900/80 border border-white/10 hover:border-cyan-500/40 transition"
+          {/* User Auth Section */}
+          {session ? (
+            <div className="flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 border-l border-white/10 pl-2 sm:pl-3">
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 p-1 rounded-2xl bg-slate-900/80 border border-white/10 hover:border-cyan-500/40 transition"
+              >
+                <img
+                  src={session.user.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80"}
+                  alt="User"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl object-cover"
+                />
+              </Link>
+              <button 
+                onClick={() => signOut()}
+                className="hidden sm:block text-xs font-bold text-slate-400 hover:text-white transition"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="ml-1 sm:ml-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-[10px] sm:text-xs font-bold hover:bg-cyan-500 hover:text-slate-950 transition"
+            >
+              Sign In
+            </Link>
+          )}
+
+          {/* Mobile Menu Toggle */}
+          <button 
+            className="md:hidden p-1.5 text-slate-300 hover:text-cyan-400"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80"
-              alt="User"
-              className="w-9 h-9 rounded-xl object-cover"
-            />
-          </Link>
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {isMobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
 
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-slate-950/95 backdrop-blur-xl border-t border-white/10 p-4">
+          <nav className="flex flex-col gap-2">
+            <Link href="/jobs" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition text-sm font-medium">
+              Find Work
+            </Link>
+            <Link href="/jobs/create" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition text-sm font-medium flex items-center gap-2">
+              <PlusCircle className="w-4 h-4 text-cyan-400" /> Post a Job
+            </Link>
+            <Link href="/dashboard/client" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition text-sm font-medium">
+              Client Portal
+            </Link>
+            <Link href="/dashboard/freelancer" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition text-sm font-medium">
+              3D Dashboard
+            </Link>
+            {session && (
+              <button 
+                onClick={() => { signOut(); setIsMobileMenuOpen(false); }}
+                className="text-left px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition text-sm font-medium"
+              >
+                Sign Out
+              </button>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

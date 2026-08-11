@@ -20,27 +20,49 @@ import {
 import Link from 'next/link';
 import { SAMPLE_JOBS } from '@/lib/store';
 
+import { useEffect } from 'react';
+
 export default function JobDetailPage({ params }) {
   const resolvedParams = use(params);
   const jobId = resolvedParams.id;
-  const job = SAMPLE_JOBS.find(j => j.id === jobId) || SAMPLE_JOBS[0];
 
+  const [job, setJob] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showProposalModal, setShowProposalModal] = useState(false);
-  const [bidAmount, setBidAmount] = useState(job.type === 'FIXED_PRICE' ? job.budget : 95);
-  const [coverLetter, setCoverLetter] = useState('Hi! I am a senior R3F & Next.js 15 developer. I have extensive experience building interactive 3D canvases and escrow pipelines.');
+  const [bidAmount, setBidAmount] = useState(1000);
+  const [coverLetter, setCoverLetter] = useState('Hi! I am experienced with R3F & Next.js 15. I would love to build this project for you.');
   
-  // Custom Milestones Breakdown
   const [milestones, setMilestones] = useState([
-    { title: 'Milestone 1: 3D Scene Architecture & Lighting', amount: 1500 },
-    { title: 'Milestone 2: Glowing Node Paths & Controls', amount: 1500 },
-    { title: 'Milestone 3: Final Integration & Polish', amount: 1200 }
+    { title: 'Milestone 1: Setup & Initial Architecture', amount: 500 },
+    { title: 'Milestone 2: Final Polish & Delivery', amount: 500 }
   ]);
 
   const [submitted, setSubmitted] = useState(false);
 
+  useEffect(() => {
+    fetchJobDetail();
+  }, [jobId]);
+
+  const fetchJobDetail = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/jobs/feed`);
+      const data = await res.json();
+      if (data.success) {
+        const found = data.jobs.find(j => j.id === jobId);
+        setJob(found || data.jobs[0]);
+        if (found) setBidAmount(found.budget || 1000);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const addMilestone = () => {
-    setMilestones([...milestones, { title: `Milestone ${milestones.length + 1}`, amount: 1000 }]);
+    setMilestones([...milestones, { title: `Milestone ${milestones.length + 1}`, amount: 500 }]);
   };
 
   const removeMilestone = (index) => {
@@ -53,14 +75,33 @@ export default function JobDetailPage({ params }) {
     setMilestones(updated);
   };
 
-  const handleSubmitProposal = (e) => {
+  const handleSubmitProposal = async (e) => {
     e.preventDefault();
     setSubmitted(true);
-    setTimeout(() => {
-      setShowProposalModal(false);
+    try {
+      const res = await fetch('/api/proposals/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobId,
+          bidAmount,
+          coverLetter
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('Proposal successfully submitted to Client!');
+        setShowProposalModal(false);
+      } else {
+        alert(data.error || 'Failed to submit proposal. Make sure you are logged in as a Freelancer.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error submitting proposal.');
+    } finally {
       setSubmitted(false);
-      alert('Proposal successfully submitted to Client!');
-    }, 1000);
+    }
   };
 
   return (
@@ -77,8 +118,17 @@ export default function JobDetailPage({ params }) {
           <ArrowLeft className="w-4 h-4" /> Back to Job Feed
         </Link>
 
-        {/* Job Header Glass Panel */}
-        <div className="p-8 rounded-3xl glass-panel border border-white/10 space-y-6">
+        {loading ? (
+          <div className="p-12 text-center text-slate-400 glass-panel rounded-3xl">
+            Loading job details...
+          </div>
+        ) : !job ? (
+          <div className="p-12 text-center text-slate-400 glass-panel rounded-3xl">
+            Job contract not found.
+          </div>
+        ) : (
+          /* Job Header Glass Panel */
+          <div className="p-8 rounded-3xl glass-panel border border-white/10 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
             <div>
               <span className="text-xs font-mono px-3 py-1 rounded-full bg-cyan-950/80 text-cyan-400 border border-cyan-500/30 font-bold">
@@ -131,6 +181,7 @@ export default function JobDetailPage({ params }) {
             </button>
           </div>
         </div>
+        )}
 
         {/* PROPOSAL SUBMISSION MODAL */}
         {showProposalModal && (

@@ -208,7 +208,7 @@ export default function LandingPage() {
               <h2 className="text-2xl font-bold text-white tracking-tight">Top Rated 3D Freelancers</h2>
               <p className="text-xs text-slate-400 mt-1">Pre-vetted developers available for instant contract award</p>
             </div>
-            <Link href="/onboarding" className="text-xs font-bold text-cyan-400 hover:underline">
+            <Link href="/signup" className="text-xs font-bold text-cyan-400 hover:underline">
               Join as Freelancer
             </Link>
           </div>

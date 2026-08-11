@@ -17,15 +17,35 @@ import {
   ArrowRight,
   ChevronRight
 } from 'lucide-react';
-import { SAMPLE_JOBS } from '@/lib/store';
+import { useEffect } from 'react';
 
 export default function JobFeedPage() {
-  const [jobs, setJobs] = useState(SAMPLE_JOBS);
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('ALL'); // 'ALL' | 'FIXED_PRICE' | 'HOURLY'
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [selectedSkill, setSelectedSkill] = useState('');
   const [isChatOpen, setIsChatOpen] = useState(false);
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/jobs/feed');
+      const data = await res.json();
+      if (data.success) {
+        setJobs(data.jobs);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const categories = ['ALL', '3D & WebGL Development', 'Full Stack & Payments', 'UI/UX & Frontend'];
 

@@ -50,8 +50,12 @@ export default async function ClientDashboardPage() {
   const formattedJobs = jobs.map(j => ({
     id: j.id,
     title: j.title,
-    category: j.type, // Map enum to category
+    description: j.description,
+    type: j.type,
+    category: j.type === 'FIXED_PRICE' ? 'Fixed Price' : 'Hourly Rate',
     budget: j.budget,
+    skills: j.skills || [],
+    createdAt: j.createdAt.toISOString(),
     proposalsCount: j._count.proposals,
   }));
 

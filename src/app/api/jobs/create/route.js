@@ -1,26 +1,30 @@
 import { NextResponse } from 'next/server';
-import { SAMPLE_JOBS } from '@/lib/store';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import prisma from "@/lib/prisma";
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const newJob = {
-      id: `job_${Date.now()}`,
-      title: body.title,
-      description: body.description,
-      type: body.type || 'FIXED_PRICE',
-      budget: parseFloat(body.budget) || 1000,
-      category: body.category || '3D & WebGL Development',
-      skills: body.skills || ['React Three Fiber', 'Next.js 15'],
-      clientId: body.clientId || 'usr_client_1',
-      clientName: body.clientName || 'Metaverse Labs Inc',
-      clientVerified: true,
-      proposalsCount: 0,
-      createdAt: new Date().toISOString(),
-      status: 'OPEN'
-    };
+    const session = await getServerSession(authOptions);
+    
+    if (!session || session.user.role !== "CLIENT") {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
 
-    SAMPLE_JOBS.unshift(newJob);
+    const body = await request.json();
+    
+    // Create job in the database
+    const newJob = await prisma.job.create({
+      data: {
+        title: body.title,
+        description: body.description,
+        type: body.type || 'FIXED_PRICE',
+        budget: parseFloat(body.budget) || 1000,
+        skills: body.skills || ['React Three Fiber', 'Next.js 15'],
+        clientId: session.user.id
+      }
+    });
+
     return NextResponse.json({ success: true, job: newJob });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });

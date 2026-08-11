@@ -35,8 +35,7 @@ const proposalData = [
   { name: 'Rejected', value: 2, color: '#ff6b6b' },
 ];
 
-export default function FreelancerDashboard({ initialContracts = [], jobFeed = [], user }) {
-  // We mock some states just to match the visual if real data isn't full enough
+export default function FreelancerDashboard({ initialContracts = [], initialProposals = [], jobFeed = [], user }) {
   
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
@@ -45,39 +44,24 @@ export default function FreelancerDashboard({ initialContracts = [], jobFeed = [
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            Welcome back, {user?.name || 'John'}! <span className="text-2xl">👋</span>
+            Welcome back, {user?.name || 'Freelancer'}! <span className="text-2xl">👋</span>
           </h2>
           <p className="text-sm text-slate-500 mt-1">Here's what's happening with your work today.</p>
         </div>
-        <button className="px-4 py-2 bg-[#ff2a5f] hover:bg-[#ff104b] text-white text-sm font-semibold rounded-lg flex items-center gap-2 shadow-sm shadow-[#ff2a5f]/20 transition">
-          Customize Dashboard <ChevronDown className="w-4 h-4" />
-        </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        {/* Earnings */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-[#6c5ce7]/10 flex items-center justify-center">
-              <Wallet className="w-5 h-5 text-[#6c5ce7]" />
-            </div>
-            <span className="text-xs font-semibold text-slate-500">Total Earnings</span>
-          </div>
-          <div className="text-2xl font-black text-slate-800">$12,450</div>
-          <div className="text-[10px] font-semibold text-emerald-500 mt-1">↑ 18.6% this month</div>
-        </div>
-
-        {/* Active Projects */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Active Contracts */}
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-[#2d5bff]/10 flex items-center justify-center">
               <Briefcase className="w-5 h-5 text-[#2d5bff]" />
             </div>
-            <span className="text-xs font-semibold text-slate-500">Active Projects</span>
+            <span className="text-xs font-semibold text-slate-500">Active Contracts</span>
           </div>
-          <div className="text-2xl font-black text-slate-800">08</div>
-          <div className="text-[10px] font-semibold text-[#2d5bff] mt-1">3 new this week</div>
+          <div className="text-2xl font-black text-slate-800">{initialContracts.length}</div>
+          <div className="text-[10px] font-semibold text-[#2d5bff] mt-1">In progress</div>
         </div>
 
         {/* Proposals */}
@@ -86,34 +70,22 @@ export default function FreelancerDashboard({ initialContracts = [], jobFeed = [
             <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
               <Send className="w-5 h-5 text-emerald-500" />
             </div>
-            <span className="text-xs font-semibold text-slate-500">Proposals Submitted</span>
+            <span className="text-xs font-semibold text-slate-500">My Proposals</span>
           </div>
-          <div className="text-2xl font-black text-slate-800">24</div>
-          <div className="text-[10px] font-semibold text-amber-500 mt-1">5 pending response</div>
+          <div className="text-2xl font-black text-slate-800">{initialProposals.length}</div>
+          <div className="text-[10px] font-semibold text-amber-500 mt-1">Submitted bids</div>
         </div>
 
-        {/* Profile Views */}
+        {/* Available Jobs */}
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
               <Eye className="w-5 h-5 text-amber-500" />
             </div>
-            <span className="text-xs font-semibold text-slate-500">Profile Views</span>
+            <span className="text-xs font-semibold text-slate-500">Available Jobs</span>
           </div>
-          <div className="text-2xl font-black text-slate-800">312</div>
-          <div className="text-[10px] font-semibold text-emerald-500 mt-1">↑ 12% this week</div>
-        </div>
-
-        {/* Rating */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-[#ff2a5f]/10 flex items-center justify-center">
-              <Star className="w-5 h-5 text-[#ff2a5f]" />
-            </div>
-            <span className="text-xs font-semibold text-slate-500">Client Rating</span>
-          </div>
-          <div className="text-2xl font-black text-slate-800">4.8</div>
-          <div className="text-[10px] font-semibold text-[#6c5ce7] mt-1">Top Rated</div>
+          <div className="text-2xl font-black text-slate-800">{jobFeed.length}</div>
+          <Link href="/jobs" className="text-[10px] font-semibold text-amber-600 mt-1 hover:underline">Explore Feed →</Link>
         </div>
       </div>
 

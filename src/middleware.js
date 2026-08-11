@@ -27,6 +27,9 @@ export default withAuth(
     if (path.startsWith("/dashboard/admin") && token?.role !== "ADMIN") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
+    if (path.startsWith("/jobs/create") && token?.role !== "CLIENT" && token?.role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
   },
   {
     callbacks: {
@@ -39,5 +42,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/dashboard"],
+  matcher: ["/dashboard/:path*", "/dashboard", "/jobs/create"],
 };

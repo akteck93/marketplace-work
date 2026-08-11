@@ -34,6 +34,13 @@ export default async function FreelancerDashboardPage() {
     take: 20 // Limit to 20 recent jobs for now
   });
 
+  // Fetch Proposals submitted by freelancer
+  const proposals = await prisma.proposal.findMany({
+    where: { freelancerId: session.user.id },
+    include: { job: true },
+    orderBy: { createdAt: "desc" }
+  });
+
   const formattedContracts = contracts.map(c => ({
     id: c.id,
     jobTitle: c.job.title,
@@ -41,6 +48,15 @@ export default async function FreelancerDashboardPage() {
     amount: c.amount,
     status: c.status,
     milestones: c.milestones,
+  }));
+
+  const formattedProposals = proposals.map(p => ({
+    id: p.id,
+    jobTitle: p.job.title,
+    bidAmount: p.bidAmount,
+    coverLetter: p.coverLetter,
+    status: p.status,
+    createdAt: p.createdAt.toISOString()
   }));
 
   const formattedJobs = availableJobs.map(j => ({
@@ -57,7 +73,8 @@ export default async function FreelancerDashboardPage() {
 
   return (
     <FreelancerDashboard 
-      initialContracts={formattedContracts} 
+      initialContracts={formattedContracts}
+      initialProposals={formattedProposals}
       jobFeed={formattedJobs} 
       user={session.user}
     />
