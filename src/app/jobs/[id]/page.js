@@ -140,121 +140,139 @@ export default function JobDetailPage({ params }) {
     }
   };
 
-  const handlePayment = async (amountUSD, isSubscription) => {
-    if (!isRazorpayLoaded) {
-      alert("Razorpay SDK is not loaded yet!");
-      return;
+  const PAYPAL_ME = 'https://paypal.me/aloks272';
+  const [paypalOpened, setPaypalOpened] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+
+  const openPayPal = (plan) => {
+    setSelectedPlan(plan);
+    const amount = plan === 'single' ? '1' : '5';
+    const note = plan === 'single' ? 'Workiffy-Single-Proposal' : 'Workiffy-Freelancer-Pro';
+    window.open(`${PAYPAL_ME}/${amount}USD?note=${note}`, '_blank');
+    setPaypalOpened(true);
+  };
+
+  const handlePayPalConfirm = async () => {
+    if (selectedPlan === 'pro') {
+      try {
+        await fetch('/api/user/subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan: 'FREELANCER_PRO', durationDays: 30 })
+        });
+        setHasSubscription(true);
+      } catch (err) {
+        console.error('Subscription update failed', err);
+      }
     }
-    
-    // Amount is in currency subunits (paise for INR). Assuming 1 USD = 80 INR roughly for demo.
-    const amountINR = amountUSD * 80 * 100;
-
-    const options = {
-      key: "rzp_test_YourTestKey", // Mock Key
-      amount: amountINR.toString(), 
-      currency: "INR",
-      name: "Workiffy Marketplace",
-      description: isSubscription ? "1 Month Freelancer Pro Subscription" : "Single Proposal Connects Fee",
-      image: "https://marketplace-work-rose.vercel.app/favicon.ico",
-      handler: async function (response) {
-        alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
-        
-        if (isSubscription) {
-          // Update subscription in backend
-          await fetch('/api/user/subscription', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ plan: 'FREELANCER_PRO', durationDays: 30 })
-          });
-          setHasSubscription(true);
-        }
-        
-        setShowPaywall(false);
-        executeProposalSubmit(); // Immediately submit proposal after payment
-      },
-      prefill: {
-        name: session?.user?.name || "Freelancer",
-        email: session?.user?.email || "freelancer@example.com",
-      },
-      theme: {
-        color: "#ff2a5f", // Red Theme
-      },
-    };
-
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+    setShowPaywall(false);
+    executeProposalSubmit();
   };
 
 
   return (
-    <div className="min-h-screen flex flex-col bg-white relative">
-      <Script 
-        src="https://checkout.razorpay.com/v1/checkout.js" 
-        onLoad={() => setIsRazorpayLoaded(true)} 
-      />
       <Navbar
         activeRole="FREELANCER"
         onRoleChange={() => {}}
         onToggleChat={() => setIsChatOpen(true)}
       />
 
-      {/* Paywall Modal */}
+      {/* ─── PayPal Payment Modal ─── */}
       {showPaywall && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-white border border-slate-200 rounded-3xl p-8 max-w-lg w-full shadow-2xl relative">
-            <button 
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative border border-slate-100">
+            <button
               onClick={() => { setShowPaywall(false); setShowProposalModal(true); }}
-              className="absolute top-4 right-4 text-slate-500 hover:text-black"
+              className="absolute top-4 right-4 text-slate-400 hover:text-black transition"
             >
               <X className="w-5 h-5" />
             </button>
+
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30">
-                <CreditCard className="w-8 h-8 text-[#ff2a5f]" />
+              <div className="w-16 h-16 bg-[#003087]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-[#003087] font-black text-2xl">P</span>
               </div>
-              <h2 className="text-2xl font-bold text-black mb-2">Submit Your Proposal</h2>
-              <p className="text-sm text-slate-600">Choose a payment option to apply for this job.</p>
+              <h2 className="text-2xl font-black text-black mb-2">Apply for this Job</h2>
+              <p className="text-sm text-slate-500">Choose a plan and pay via PayPal to submit your proposal.</p>
             </div>
 
-            <div className="space-y-4">
-              <div className="p-5 rounded-2xl border border-slate-200 hover:border-black bg-slate-50 transition cursor-pointer flex justify-between items-center group" onClick={() => handlePayment(1, false)}>
-                <div>
-                  <h3 className="font-bold text-black text-lg">Single Proposal</h3>
-                  <p className="text-xs text-slate-500 mt-1">Pay once for this specific application.</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-2xl font-black text-black">$1</span>
-                </div>
-              </div>
-
-              <div className="p-5 rounded-2xl border-2 border-[#ff2a5f] bg-red-50 transition cursor-pointer flex justify-between items-center relative overflow-hidden" onClick={() => handlePayment(5, true)}>
-                <div className="absolute top-0 right-0 bg-[#ff2a5f] text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg">RECOMMENDED</div>
-                <div>
-                  <h3 className="font-bold text-[#ff2a5f] text-lg">Pro Subscription</h3>
-                  <p className="text-xs text-slate-600 mt-1">Unlimited proposals for 30 days.</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-2xl font-black text-black">$5<span className="text-xs text-slate-500 font-normal">/mo</span></span>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-slate-200 mt-4 text-center">
-                <p className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">Or Pay via PayPal</p>
-                <a 
-                  href="https://paypal.me/YOUR_PAYPAL_LINK_HERE" 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#003087] hover:bg-[#001c56] text-white font-bold text-sm transition"
+            {!paypalOpened ? (
+              <div className="space-y-4">
+                <button
+                  onClick={() => openPayPal('single')}
+                  className="w-full p-5 rounded-2xl border-2 border-slate-200 hover:border-black bg-white transition text-left group"
                 >
-                  Pay with PayPal
-                </a>
-                <p className="text-[10px] text-slate-400 mt-2">After paying via PayPal, contact admin to verify.</p>
-              </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-black text-lg">Single Apply</h3>
+                      <p className="text-xs text-slate-500 mt-1">Pay once to submit this proposal.</p>
+                    </div>
+                    <span className="text-2xl font-black text-black">$1</span>
+                  </div>
+                </button>
 
-            </div>
+                <button
+                  onClick={() => openPayPal('pro')}
+                  className="w-full p-5 rounded-2xl border-2 border-[#cc0000] bg-red-50 hover:bg-red-100 transition text-left relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 bg-[#cc0000] text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl">BEST VALUE</div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-[#cc0000] text-lg">Pro Subscription</h3>
+                      <p className="text-xs text-slate-600 mt-1">Unlimited proposals for 30 days.</p>
+                    </div>
+                    <div>
+                      <span className="text-2xl font-black text-black">$5</span>
+                      <span className="text-xs text-slate-500 font-normal">/mo</span>
+                    </div>
+                  </div>
+                </button>
+
+                <p className="text-center text-xs text-slate-400 pt-2">Clicking will open PayPal in a new tab.</p>
+              </div>
+            ) : (
+              <div className="space-y-6 text-center">
+                <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100">
+                  <div className="w-12 h-12 bg-[#003087] rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-white font-black text-lg">P</span>
+                  </div>
+                  <p className="font-bold text-black text-sm">PayPal opened in new tab</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Amount: <strong>{selectedPlan === 'single' ? '$1 USD' : '$5 USD'}</strong> to <strong>@aloks272</strong>
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={handlePayPalConfirm}
+                    disabled={submitted}
+                    className="w-full py-4 bg-[#cc0000] hover:bg-[#aa0000] text-white rounded-full font-bold text-sm flex items-center justify-center gap-2 transition shadow-md"
+                  >
+                    {submitted ? 'Submitting Proposal...' : "✓ I've Paid — Submit My Proposal"}
+                  </button>
+                  <button
+                    onClick={() => openPayPal(selectedPlan)}
+                    className="w-full py-3 border border-slate-200 rounded-full text-sm text-slate-600 hover:bg-slate-50 font-medium transition"
+                  >
+                    Re-open PayPal
+                  </button>
+                  <button
+                    onClick={() => setPaypalOpened(false)}
+                    className="text-xs text-slate-400 hover:text-black underline"
+                  >
+                    ← Back to plan selection
+                  </button>
+                </div>
+
+                <p className="text-[10px] text-slate-400">Our team will verify your PayPal payment within 24 hours.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
+
+
+
 
 
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">

@@ -5,27 +5,24 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ChatDrawer from '@/components/ChatDrawer';
 import { 
-  Briefcase, 
-  DollarSign, 
-  Tag, 
   Plus, 
   X, 
-  Sparkles, 
   CheckCircle2, 
-  ShieldCheck,
   ArrowRight,
-  CreditCard
+  CreditCard,
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import Script from 'next/script';
 import Link from 'next/link';
+
+const PAYPAL_ME = 'https://paypal.me/aloks272';
 
 export default function CreateJobPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
 
   // Form Fields
   const [title, setTitle] = useState('');
@@ -41,13 +38,14 @@ export default function CreateJobPage() {
   // Dynamic Categories
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
-  
-  // Payment State
+
+  // Payment Modal State
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
+  const [paypalOpened, setPaypalOpened] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null); // 'single' | 'pro'
 
   useEffect(() => {
-    // Fetch dynamic categories from DB
     const fetchCategories = async () => {
       try {
         const res = await fetch('/api/categories');
@@ -69,7 +67,6 @@ export default function CreateJobPage() {
   }, []);
 
   useEffect(() => {
-    // Check if user has an active subscription
     const checkSubscription = async () => {
       try {
         const res = await fetch('/api/user/profile');
@@ -77,18 +74,14 @@ export default function CreateJobPage() {
           const data = await res.json();
           if (data.subscriptionActiveUntil) {
             const expDate = new Date(data.subscriptionActiveUntil);
-            if (expDate > new Date()) {
-              setHasSubscription(true);
-            }
+            if (expDate > new Date()) setHasSubscription(true);
           }
         }
       } catch (err) {
-        console.error("Failed to check subscription", err);
+        console.error('Failed to check subscription', err);
       }
     };
-    if (session) {
-      checkSubscription();
-    }
+    if (session) checkSubscription();
   }, [session]);
 
   const handleCategoryChange = (categoryId) => {
@@ -128,11 +121,9 @@ export default function CreateJobPage() {
       });
 
       if (res.ok) {
-        setTimeout(() => {
-          router.push('/dashboard/client');
-        }, 800);
+        setTimeout(() => router.push('/dashboard/client'), 800);
       } else {
-        alert("Failed to post job.");
+        alert('Failed to post job. Please try again.');
         setIsSubmitting(false);
       }
     } catch (err) {
@@ -147,142 +138,179 @@ export default function CreateJobPage() {
       executeJobPost();
     } else {
       setShowPaywall(true);
+      setPaypalOpened(false);
+      setSelectedPlan(null);
     }
   };
 
-  const handlePayment = async (amountUSD, isSubscription) => {
-    if (!isRazorpayLoaded) {
-      alert("Razorpay SDK is not loaded yet!");
-      return;
+  // Open PayPal with correct amount, then show confirmation button
+  const openPayPal = (plan) => {
+    setSelectedPlan(plan);
+    const amount = plan === 'single' ? '1' : '5';
+    const note = plan === 'single' ? 'Workiffy-Single-Post' : 'Workiffy-Pro-Subscription';
+    window.open(`${PAYPAL_ME}/${amount}USD?note=${note}`, '_blank');
+    setPaypalOpened(true);
+  };
+
+  // Called after user confirms they've paid on PayPal
+  const handlePayPalConfirm = async () => {
+    if (selectedPlan === 'pro') {
+      try {
+        await fetch('/api/user/subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan: 'CLIENT_PRO', durationDays: 30 })
+        });
+        setHasSubscription(true);
+      } catch (err) {
+        console.error('Subscription update failed', err);
+      }
     }
-    
-    // Amount is in currency subunits (paise for INR). Assuming 1 USD = 80 INR roughly for demo.
-    const amountINR = amountUSD * 80 * 100;
-
-    const options = {
-      key: "rzp_test_YourTestKey", // Mock Key
-      amount: amountINR.toString(), 
-      currency: "INR",
-      name: "Workiffy Marketplace",
-      description: isSubscription ? "1 Month Client Subscription" : "Single Job Post Fee",
-      image: "https://marketplace-work-rose.vercel.app/favicon.ico",
-      handler: async function (response) {
-        alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
-        
-        if (isSubscription) {
-          // Update subscription in backend
-          await fetch('/api/user/subscription', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ plan: 'CLIENT_PRO', durationDays: 30 })
-          });
-          setHasSubscription(true);
-        }
-        
-        setShowPaywall(false);
-        executeJobPost();
-      },
-      prefill: {
-        name: session?.user?.name || "Client User",
-        email: session?.user?.email || "client@example.com",
-      },
-      theme: {
-        color: "#ff2a5f", // Red theme for Razorpay
-      },
-    };
-
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+    setShowPaywall(false);
+    executeJobPost();
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-white relative">
-      <Script 
-        src="https://checkout.razorpay.com/v1/checkout.js" 
-        onLoad={() => setIsRazorpayLoaded(true)} 
-      />
-      
       <Navbar
         activeRole="CLIENT"
         onRoleChange={() => {}}
         onToggleChat={() => setIsChatOpen(true)}
       />
 
-      {/* Paywall Modal */}
+      {/* ─── PayPal Payment Modal ─── */}
       {showPaywall && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-white border border-slate-200 rounded-3xl p-8 max-w-lg w-full shadow-2xl relative">
-            <button 
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative border border-slate-100">
+            <button
               onClick={() => setShowPaywall(false)}
-              className="absolute top-4 right-4 text-slate-500 hover:text-black"
+              className="absolute top-4 right-4 text-slate-400 hover:text-black transition"
             >
               <X className="w-5 h-5" />
             </button>
+
+            {/* Header */}
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30">
-                <CreditCard className="w-8 h-8 text-[#ff2a5f]" />
+              <div className="w-16 h-16 bg-[#003087]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CreditCard className="w-8 h-8 text-[#003087]" />
               </div>
-              <h2 className="text-2xl font-bold text-black mb-2">Publish Your Contract</h2>
-              <p className="text-sm text-slate-600">Choose a payment option to post this job to the marketplace.</p>
+              <h2 className="text-2xl font-black text-black mb-2">Choose a Plan</h2>
+              <p className="text-sm text-slate-500">Pay securely via PayPal to publish your job.</p>
             </div>
 
-            <div className="space-y-4">
-              <div className="p-5 rounded-2xl border border-slate-200 hover:border-black bg-slate-50 transition cursor-pointer flex justify-between items-center group" onClick={() => handlePayment(1, false)}>
-                <div>
-                  <h3 className="font-bold text-black text-lg">Single Post</h3>
-                  <p className="text-xs text-slate-500 mt-1">Pay once for this specific job posting.</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-2xl font-black text-black">$1</span>
-                </div>
-              </div>
-
-              <div className="p-5 rounded-2xl border-2 border-[#ff2a5f] bg-red-50 transition cursor-pointer flex justify-between items-center relative overflow-hidden" onClick={() => handlePayment(5, true)}>
-                <div className="absolute top-0 right-0 bg-[#ff2a5f] text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg">RECOMMENDED</div>
-                <div>
-                  <h3 className="font-bold text-[#ff2a5f] text-lg">Pro Subscription</h3>
-                  <p className="text-xs text-slate-600 mt-1">Unlimited job posts for 30 days.</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-2xl font-black text-black">$5<span className="text-xs text-slate-500 font-normal">/mo</span></span>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-slate-200 mt-4 text-center">
-                <p className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">Or Pay via PayPal</p>
-                <a 
-                  href="https://paypal.me/YOUR_PAYPAL_LINK_HERE" 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#003087] hover:bg-[#001c56] text-white font-bold text-sm transition"
+            {/* Plan Options */}
+            {!paypalOpened ? (
+              <div className="space-y-4">
+                {/* Single Post */}
+                <button
+                  onClick={() => openPayPal('single')}
+                  className="w-full p-5 rounded-2xl border-2 border-slate-200 hover:border-black bg-white transition text-left group"
                 >
-                  Pay with PayPal
-                </a>
-                <p className="text-[10px] text-slate-400 mt-2">After paying via PayPal, contact admin to verify.</p>
-              </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-black text-lg">Single Post</h3>
+                      <p className="text-xs text-slate-500 mt-1">Pay once for this specific job posting.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-black text-black">$1</span>
+                      <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-black transition" />
+                    </div>
+                  </div>
+                </button>
 
-            </div>
+                {/* Pro Subscription */}
+                <button
+                  onClick={() => openPayPal('pro')}
+                  className="w-full p-5 rounded-2xl border-2 border-[#cc0000] bg-red-50 hover:bg-red-100 transition text-left relative overflow-hidden group"
+                >
+                  <div className="absolute top-0 right-0 bg-[#cc0000] text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl">BEST VALUE</div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-[#cc0000] text-lg">Pro Subscription</h3>
+                      <p className="text-xs text-slate-600 mt-1">Unlimited job posts for 30 days.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <span className="text-2xl font-black text-black">$5</span>
+                        <span className="text-xs text-slate-500 font-normal">/mo</span>
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-[#cc0000] group-hover:opacity-70 transition" />
+                    </div>
+                  </div>
+                </button>
+
+                <p className="text-center text-xs text-slate-400 pt-2">
+                  Clicking will open PayPal in a new tab. Come back to confirm after payment.
+                </p>
+              </div>
+            ) : (
+              /* After PayPal opened — Confirmation screen */
+              <div className="space-y-6 text-center">
+                <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100">
+                  <div className="w-12 h-12 bg-[#003087] rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-white font-black text-lg">P</span>
+                  </div>
+                  <p className="font-bold text-black text-sm">PayPal opened in new tab</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Amount: <strong>{selectedPlan === 'single' ? '$1 USD' : '$5 USD'}</strong> to <strong>@aloks272</strong>
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={handlePayPalConfirm}
+                    disabled={isSubmitting}
+                    className="w-full py-4 bg-[#cc0000] hover:bg-[#aa0000] text-white rounded-full font-bold text-sm flex items-center justify-center gap-2 transition shadow-md"
+                  >
+                    {isSubmitting ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Publishing Job...</>
+                    ) : (
+                      <><CheckCircle2 className="w-4 h-4" /> I've Paid — Publish My Job</>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => openPayPal(selectedPlan)}
+                    className="w-full py-3 border border-slate-200 rounded-full text-sm text-slate-600 hover:bg-slate-50 font-medium transition flex items-center justify-center gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" /> Re-open PayPal
+                  </button>
+
+                  <button
+                    onClick={() => setPaypalOpened(false)}
+                    className="text-xs text-slate-400 hover:text-black transition underline"
+                  >
+                    ← Back to plan selection
+                  </button>
+                </div>
+
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  After clicking "I've Paid", your job will be published. Our team will verify your PayPal payment within 24 hours.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
 
+      {/* ─── Main Form ─── */}
       <main className="flex-1 max-w-3xl mx-auto px-4 py-10 w-full space-y-8">
-        
+
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-extrabold text-black">Post a New Contract</h1>
-          <p className="text-xs text-slate-500">Reach over 1,840+ verified top-tier developers</p>
+          <h1 className="text-3xl font-extrabold text-black">Post a New Job</h1>
+          <p className="text-sm text-slate-500">Reach thousands of verified freelancers on Workiffy</p>
         </div>
 
         <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
           <form onSubmit={handlePreSubmit} className="space-y-6">
-            
+
             {/* Title */}
             <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1">Contract Title</label>
+              <label className="block text-xs font-bold text-slate-800 mb-1">Job Title <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 required
-                placeholder="e.g. Build Interactive 3D Product Visualizer"
+                placeholder="e.g. Build a React dashboard with Tailwind CSS"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-black placeholder-slate-400 focus:outline-none focus:border-black"
@@ -329,10 +357,8 @@ export default function CreateJobPage() {
                 <button
                   type="button"
                   onClick={() => setType('FIXED_PRICE')}
-                  className={`py-2 rounded-xl text-xs font-bold border transition ${
-                    type === 'FIXED_PRICE'
-                      ? 'bg-black text-white border-black'
-                      : 'bg-slate-50 border-slate-200 text-slate-600'
+                  className={`py-2.5 rounded-xl text-sm font-bold border transition ${
+                    type === 'FIXED_PRICE' ? 'bg-black text-white border-black' : 'bg-slate-50 border-slate-200 text-slate-600'
                   }`}
                 >
                   Fixed Price
@@ -340,10 +366,8 @@ export default function CreateJobPage() {
                 <button
                   type="button"
                   onClick={() => setType('HOURLY')}
-                  className={`py-2 rounded-xl text-xs font-bold border transition ${
-                    type === 'HOURLY'
-                      ? 'bg-black text-white border-black'
-                      : 'bg-slate-50 border-slate-200 text-slate-600'
+                  className={`py-2.5 rounded-xl text-sm font-bold border transition ${
+                    type === 'HOURLY' ? 'bg-black text-white border-black' : 'bg-slate-50 border-slate-200 text-slate-600'
                   }`}
                 >
                   Hourly Rate
@@ -354,11 +378,13 @@ export default function CreateJobPage() {
             {/* Budget */}
             <div>
               <label className="block text-xs font-bold text-slate-800 mb-1">
-                {type === 'FIXED_PRICE' ? 'Estimated Fixed Budget ($)' : 'Hourly Rate Cap ($/hr)'}
+                {type === 'FIXED_PRICE' ? 'Budget ($)' : 'Hourly Rate ($/hr)'} <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
                 required
+                min="1"
+                placeholder={type === 'FIXED_PRICE' ? 'e.g. 500' : 'e.g. 25'}
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-black focus:outline-none focus:border-black"
@@ -367,24 +393,24 @@ export default function CreateJobPage() {
 
             {/* Description */}
             <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1">Job Description & Scope</label>
+              <label className="block text-xs font-bold text-slate-800 mb-1">Job Description <span className="text-red-500">*</span></label>
               <textarea
                 rows={5}
                 required
-                placeholder="Describe project deliverables and requirements..."
+                placeholder="Describe what you need, deliverables, timeline, and any requirements..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-black placeholder-slate-400 focus:outline-none focus:border-black"
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-black placeholder-slate-400 focus:outline-none focus:border-black resize-none"
               />
             </div>
 
-            {/* Required Skills Tagging */}
+            {/* Skills */}
             <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1">Required Skills Tagging</label>
-              <div className="flex gap-2 mb-2">
+              <label className="block text-xs font-bold text-slate-800 mb-1">Required Skills</label>
+              <div className="flex gap-2 mb-3">
                 <input
                   type="text"
-                  placeholder="e.g. Next.js"
+                  placeholder="e.g. React, Node.js, Figma"
                   value={skillInput}
                   onChange={(e) => setSkillInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }}
@@ -398,12 +424,11 @@ export default function CreateJobPage() {
                   <Plus className="w-4 h-4" /> Add
                 </button>
               </div>
-
               <div className="flex flex-wrap gap-2">
                 {skills.map((s, idx) => (
-                  <span key={idx} className="px-3 py-1 rounded-lg bg-red-50 border border-red-200 text-xs font-semibold text-red-700 flex items-center gap-1.5">
+                  <span key={idx} className="px-3 py-1 rounded-full bg-black text-white text-xs font-semibold flex items-center gap-1.5">
                     {s}
-                    <button type="button" onClick={() => removeSkill(s)} className="text-red-400 hover:text-red-600">
+                    <button type="button" onClick={() => removeSkill(s)} className="text-white/60 hover:text-white">
                       <X className="w-3 h-3" />
                     </button>
                   </span>
@@ -411,32 +436,35 @@ export default function CreateJobPage() {
               </div>
             </div>
 
+            {/* Pricing Info Banner */}
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#003087]/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-[#003087] font-black text-sm">P</span>
+              </div>
+              <div className="text-sm">
+                <p className="font-bold text-black">Payment via PayPal</p>
+                <p className="text-slate-500 text-xs mt-0.5">Single post: <strong>$1</strong> · Pro subscription (30 days unlimited): <strong>$5</strong></p>
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3.5 rounded-xl bg-[#ff2a5f] hover:bg-[#e01b4a] text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-4 rounded-full bg-[#cc0000] hover:bg-[#aa0000] text-white font-bold text-base shadow-md transition flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
-                <span>Publishing Job Contract...</span>
+                <><Loader2 className="w-5 h-5 animate-spin" /> Publishing...</>
               ) : (
-                <>
-                  <span>{hasSubscription ? "Publish Contract to Marketplace" : "Pay & Publish Contract"}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
+                <>{hasSubscription ? 'Publish Job — Free (Pro Member)' : 'Continue to Payment'} <ArrowRight className="w-4 h-4" /></>
               )}
             </button>
 
           </form>
         </div>
-
       </main>
 
       <Footer />
-
-      <ChatDrawer
-        isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
-      />
+      <ChatDrawer isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 }
