@@ -1,5 +1,5 @@
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -36,7 +36,7 @@ model User {
   avatarUrl             String?
   bio                   String?
   hourlyRate            Float?
-  skills                String[]
+  skills                Json
   kycVerified           Boolean    @default(false)
   subscriptionActiveUntil DateTime?
   jobsPosted            Job[]      @relation("ClientJobs")
@@ -75,7 +75,7 @@ model Job {
   description    String
   type           JobType
   budget         Float
-  skills         String[]
+  skills         Json
   clientId       String
   client         User         @relation("ClientJobs", fields: [clientId], references: [id])
   
