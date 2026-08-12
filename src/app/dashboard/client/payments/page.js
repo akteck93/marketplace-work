@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Script from "next/script";
-import { CreditCard, DollarSign, Clock, CheckCircle2, Download, Plus } from "lucide-react";
+import { useState } from "react";
+import { DollarSign, Clock, CheckCircle2, Download, Plus, ExternalLink } from "lucide-react";
+
+const PAYPAL_ME = 'https://paypal.me/aloks272';
 
 export default function ClientPaymentsPage() {
-  const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Mock Transactions Data
@@ -15,72 +15,34 @@ export default function ClientPaymentsPage() {
     { id: "TXN-003", date: "2026-07-15", amount: 50, status: "FAILED", desc: "Wallet Recharge" },
   ]);
 
-  const handlePayment = async () => {
-    if (!isRazorpayLoaded) {
-      alert("Razorpay SDK is not loaded yet!");
-      return;
-    }
-
+  const handleAddFunds = () => {
     setIsProcessing(true);
-
-    const options = {
-      key: "rzp_test_YourTestKey", // Replace with real key in production
-      amount: "50000", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
-      currency: "INR",
-      name: "Workiffy 3D",
-      description: "Escrow Deposit / Wallet Recharge",
-      image: "https://marketplace-work-rose.vercel.app/favicon.ico",
-      handler: function (response) {
-        alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
-        
-        // Add mock transaction
-        setTransactions([
-          {
-            id: `TXN-${Math.floor(Math.random() * 10000)}`,
-            date: new Date().toISOString().split('T')[0],
-            amount: 500, // equivalent $500 roughly
-            status: "COMPLETED",
-            desc: "Wallet Recharge (via Razorpay)"
-          },
-          ...transactions
-        ]);
-        setIsProcessing(false);
-      },
-      prefill: {
-        name: "Alok Singh",
-        email: "alok@example.com",
-        contact: "9999999999",
-      },
-      notes: {
-        address: "Workiffy Corporate Office",
-      },
-      theme: {
-        color: "#2d5bff",
-      },
-      modal: {
-        ondismiss: function () {
-          setIsProcessing(false);
-          alert("Payment Cancelled");
-        }
-      }
-    };
-
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+    window.open(`${PAYPAL_ME}/50USD?note=Workiffy-Wallet-Recharge`, '_blank');
+    
+    // Add mock transaction after 2s delay
+    setTimeout(() => {
+      setTransactions([
+        {
+          id: `TXN-${Math.floor(Math.random() * 10000)}`,
+          date: new Date().toISOString().split('T')[0],
+          amount: 50,
+          status: "COMPLETED",
+          desc: "Wallet Recharge (via PayPal)"
+        },
+        ...transactions
+      ]);
+      setIsProcessing(false);
+    }, 2000);
   };
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
-      <Script 
-        src="https://checkout.razorpay.com/v1/checkout.js" 
-        onLoad={() => setIsRazorpayLoaded(true)} 
-      />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            Payments & Escrow 💳
+            Payments & Billing 💳
           </h2>
           <p className="text-sm text-slate-500 mt-1">Manage your funds, invoices, and billing history.</p>
         </div>
@@ -93,7 +55,7 @@ export default function ClientPaymentsPage() {
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Spent</p>
             <p className="text-3xl font-black text-slate-800">$1,650.00</p>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+          <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-[#cc0000]">
             <DollarSign className="w-6 h-6" />
           </div>
         </div>
@@ -108,19 +70,19 @@ export default function ClientPaymentsPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-[#2d5bff] to-[#1a47e6] rounded-2xl p-6 shadow-md flex flex-col justify-between text-white">
+        <div className="bg-black rounded-2xl p-6 shadow-md flex flex-col justify-between text-white">
           <div>
-            <p className="text-xs font-bold text-white/80 uppercase tracking-wider mb-1">Wallet Balance</p>
+            <p className="text-xs font-bold text-white/70 uppercase tracking-wider mb-1">Wallet Balance</p>
             <p className="text-3xl font-black">$0.00</p>
           </div>
           <button 
-            onClick={handlePayment}
+            onClick={handleAddFunds}
             disabled={isProcessing}
-            className="mt-4 w-full py-2.5 bg-white text-[#2d5bff] hover:bg-slate-50 font-bold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition disabled:opacity-70"
+            className="mt-4 w-full py-2.5 bg-[#cc0000] hover:bg-[#aa0000] text-white font-bold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition disabled:opacity-70"
           >
             {isProcessing ? "Processing..." : (
               <>
-                <Plus className="w-4 h-4" /> Add Funds with Razorpay
+                <Plus className="w-4 h-4" /> Add Funds via PayPal
               </>
             )}
           </button>
@@ -162,7 +124,7 @@ export default function ClientPaymentsPage() {
                   </td>
                   <td className="py-4 pr-4 font-black text-slate-900">${txn.amount.toFixed(2)}</td>
                   <td className="py-4 text-right">
-                    <button className="p-2 text-slate-400 hover:text-[#2d5bff] hover:bg-blue-50 rounded-lg transition inline-flex">
+                    <button className="p-2 text-slate-400 hover:text-[#cc0000] hover:bg-red-50 rounded-lg transition inline-flex">
                       <Download className="w-4 h-4" />
                     </button>
                   </td>

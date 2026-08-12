@@ -16,12 +16,14 @@ import {
   Trash2,
   Sparkles,
   ArrowLeft,
-  CreditCard,
-  X
+  X,
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import Script from 'next/script';
+
+const PAYPAL_ME = 'https://paypal.me/aloks272';
 
 export default function JobDetailPage({ params }) {
   const resolvedParams = use(params);
@@ -34,7 +36,6 @@ export default function JobDetailPage({ params }) {
   const [showProposalModal, setShowProposalModal] = useState(false);
   const [bidAmount, setBidAmount] = useState(1000);
   const [coverLetter, setCoverLetter] = useState('Hi! I am experienced with this stack. I would love to build this project for you.');
-  const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
   
   const [milestones, setMilestones] = useState([
     { title: 'Milestone 1: Setup & Initial Architecture', amount: 500 },
@@ -44,6 +45,8 @@ export default function JobDetailPage({ params }) {
   const [submitted, setSubmitted] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
+  const [paypalOpened, setPaypalOpened] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
   useEffect(() => {
     fetchJobDetail();
@@ -137,12 +140,10 @@ export default function JobDetailPage({ params }) {
     } else {
       setShowPaywall(true);
       setShowProposalModal(false);
+      setPaypalOpened(false);
+      setSelectedPlan(null);
     }
   };
-
-  const PAYPAL_ME = 'https://paypal.me/aloks272';
-  const [paypalOpened, setPaypalOpened] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(null);
 
   const openPayPal = (plan) => {
     setSelectedPlan(plan);
@@ -169,15 +170,15 @@ export default function JobDetailPage({ params }) {
     executeProposalSubmit();
   };
 
-
   return (
+    <div className="min-h-screen flex flex-col bg-white relative">
       <Navbar
         activeRole="FREELANCER"
         onRoleChange={() => {}}
         onToggleChat={() => setIsChatOpen(true)}
       />
 
-      {/* ─── PayPal Payment Modal ─── */}
+      {/* PayPal Payment Modal */}
       {showPaywall && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative border border-slate-100">
@@ -207,7 +208,10 @@ export default function JobDetailPage({ params }) {
                       <h3 className="font-bold text-black text-lg">Single Apply</h3>
                       <p className="text-xs text-slate-500 mt-1">Pay once to submit this proposal.</p>
                     </div>
-                    <span className="text-2xl font-black text-black">$1</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-black text-black">$1</span>
+                      <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-black transition" />
+                    </div>
                   </div>
                 </button>
 
@@ -248,13 +252,17 @@ export default function JobDetailPage({ params }) {
                     disabled={submitted}
                     className="w-full py-4 bg-[#cc0000] hover:bg-[#aa0000] text-white rounded-full font-bold text-sm flex items-center justify-center gap-2 transition shadow-md"
                   >
-                    {submitted ? 'Submitting Proposal...' : "✓ I've Paid — Submit My Proposal"}
+                    {submitted ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Submitting Proposal...</>
+                    ) : (
+                      <><CheckCircle2 className="w-4 h-4" /> I've Paid — Submit My Proposal</>
+                    )}
                   </button>
                   <button
                     onClick={() => openPayPal(selectedPlan)}
-                    className="w-full py-3 border border-slate-200 rounded-full text-sm text-slate-600 hover:bg-slate-50 font-medium transition"
+                    className="w-full py-3 border border-slate-200 rounded-full text-sm text-slate-600 hover:bg-slate-50 font-medium transition flex items-center justify-center gap-2"
                   >
-                    Re-open PayPal
+                    <ExternalLink className="w-4 h-4" /> Re-open PayPal
                   </button>
                   <button
                     onClick={() => setPaypalOpened(false)}
@@ -271,92 +279,88 @@ export default function JobDetailPage({ params }) {
         </div>
       )}
 
-
-
-
-
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
         
-        <Link href="/jobs" className="text-xs font-bold text-[#ff2a5f] flex items-center gap-1 hover:underline">
+        <Link href="/jobs" className="text-xs font-bold text-[#cc0000] flex items-center gap-1 hover:underline">
           <ArrowLeft className="w-4 h-4" /> Back to Job Feed
         </Link>
 
         {loading ? (
           <div className="p-12 text-center text-slate-500 bg-slate-50 border border-slate-200 rounded-3xl">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-slate-400" />
             Loading job details...
           </div>
         ) : !job ? (
           <div className="p-12 text-center text-slate-500 bg-slate-50 border border-slate-200 rounded-3xl">
-            Job contract not found.
+            Job not found.
           </div>
         ) : (
-          /* Job Header Glass Panel */
           <div className="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-            <div>
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
-                {job.category}
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-black mt-3">{job.title}</h1>
-              <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                <span>Posted by {job.clientName}</span>
-                <span className="flex items-center gap-1 text-emerald-600 font-bold">
-                  <ShieldCheck className="w-4 h-4" /> Verified Client
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+              <div>
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+                  {job.category?.name || job.category || 'General'}
                 </span>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-black mt-3">{job.title}</h1>
+                <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                  <span>Posted by {job.clientName}</span>
+                  <span className="flex items-center gap-1 text-emerald-600 font-bold">
+                    <ShieldCheck className="w-4 h-4" /> Verified Client
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-left sm:text-right p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <div className="text-2xl font-black text-black">
+                  {job.type === 'FIXED_PRICE' ? `$${job.budget?.toLocaleString()}` : `$${job.budget}/hr`}
+                </div>
+                <div className="text-xs text-slate-500 font-bold">{job.type?.replace('_', ' ')}</div>
               </div>
             </div>
 
-            <div className="text-left sm:text-right p-4 rounded-2xl bg-slate-50 border border-slate-100">
-              <div className="text-2xl font-black text-black">
-                {job.type === 'FIXED_PRICE' ? `$${job.budget.toLocaleString()}` : `$${job.budget}/hr`}
+            {/* Description */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold text-black uppercase tracking-wider">Job Description</h3>
+              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                {job.description}
+              </p>
+            </div>
+
+            {/* Required Skills */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold text-black uppercase tracking-wider">Required Skills</h3>
+              <div className="flex flex-wrap gap-2">
+                {job.skills?.map((s, idx) => (
+                  <span key={idx} className="px-3 py-1 rounded-full bg-black text-white text-xs font-semibold">
+                    {s}
+                  </span>
+                ))}
               </div>
-              <div className="text-xs text-slate-500 font-bold">{job.type.replace('_', ' ')}</div>
+            </div>
+
+            {/* Action Button */}
+            <div className="pt-4 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => setShowProposalModal(true)}
+                className="px-8 py-3.5 rounded-full bg-[#cc0000] hover:bg-[#aa0000] text-white font-bold text-sm shadow-md transition flex items-center gap-2"
+              >
+                <Send className="w-4 h-4" /> Submit Proposal
+              </button>
             </div>
           </div>
-
-          {/* Description */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-bold text-black uppercase tracking-wider">Job Description</h3>
-            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-              {job.description}
-            </p>
-          </div>
-
-          {/* Required Skills */}
-          <div className="space-y-2">
-            <h3 className="text-xs font-bold text-black uppercase tracking-wider">Required Skills</h3>
-            <div className="flex flex-wrap gap-2">
-              {job.skills.map((s, idx) => (
-                <span key={idx} className="px-3 py-1 rounded-lg bg-red-50 border border-red-200 text-xs font-semibold text-red-700">
-                  {s}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Action Button */}
-          <div className="pt-4 border-t border-slate-100 flex justify-end">
-            <button
-              onClick={() => setShowProposalModal(true)}
-              className="px-8 py-3.5 rounded-xl bg-[#ff2a5f] hover:bg-[#e01b4a] text-white font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"
-            >
-              <Send className="w-4 h-4" /> Submit Proposal
-            </button>
-          </div>
-        </div>
         )}
 
         {/* PROPOSAL SUBMISSION MODAL */}
         {showProposalModal && (
-          <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
               
               <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                 <div>
                   <h2 className="text-xl font-bold text-black flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-[#ff2a5f]" /> Submit Proposal
+                    <Sparkles className="w-5 h-5 text-[#cc0000]" /> Submit Proposal
                   </h2>
-                  <p className="text-xs text-slate-500">Define your bid, cover letter, and escrow milestones</p>
+                  <p className="text-xs text-slate-500">Define your bid, cover letter, and milestones</p>
                 </div>
                 <button onClick={() => setShowProposalModal(false)} className="text-slate-400 hover:text-black">
                   <X className="w-5 h-5"/>
@@ -394,7 +398,7 @@ export default function JobDetailPage({ params }) {
                     <button
                       type="button"
                       onClick={addMilestone}
-                      className="text-xs text-[#ff2a5f] font-bold hover:underline flex items-center gap-1"
+                      className="text-xs text-[#cc0000] font-bold hover:underline flex items-center gap-1"
                     >
                       <Plus className="w-3.5 h-3.5" /> Add Milestone
                     </button>
@@ -425,12 +429,27 @@ export default function JobDetailPage({ params }) {
                   </div>
                 </div>
 
+                {/* Pricing Info */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#003087]/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-[#003087] font-black text-sm">P</span>
+                  </div>
+                  <div className="text-sm">
+                    <p className="font-bold text-black">Payment via PayPal</p>
+                    <p className="text-slate-500 text-xs">Single apply: <strong>$1</strong> · Pro (30 days unlimited): <strong>$5</strong></p>
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   disabled={submitted}
-                  className="w-full py-3.5 rounded-xl bg-[#ff2a5f] hover:bg-[#e01b4a] text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-4 rounded-full bg-[#cc0000] hover:bg-[#aa0000] text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2"
                 >
-                  {submitted ? 'Submitting to Client...' : (hasSubscription ? 'Submit Official Proposal' : 'Pay & Submit Proposal')}
+                  {submitted ? (
+                    <><Loader2 className="w-5 h-5 animate-spin" /> Submitting...</>
+                  ) : (
+                    <>{hasSubscription ? 'Submit Proposal (Pro Member)' : 'Continue to Payment'}</>
+                  )}
                 </button>
 
               </form>
