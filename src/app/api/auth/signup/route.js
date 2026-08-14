@@ -29,6 +29,7 @@ export async function POST(req) {
         email,
         password: hashedPassword,
         role: role || "FREELANCER",
+        skills: [],
       },
     });
 
