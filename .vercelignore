@@ -1,0 +1,9 @@
+.next
+node_modules
+*.zip
+*.tar.gz
+*.sql
+bundle.js
+fix-sql.js
+temp_check_zip
+Marketplace_3D_Blueprint.pdf
